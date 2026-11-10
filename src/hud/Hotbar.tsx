@@ -54,8 +54,8 @@ export const Hotbar: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center gap-2 select-none pointer-events-auto">
-      {/* 9-Slot Hotbar Frame */}
-      <div className="relative flex items-center bg-[#8f8f8f]/80 p-[2px] border-2 border-t-[#c6c6c6] border-l-[#c6c6c6] border-b-[#373737] border-r-[#373737] shadow-2xl">
+      {/* 9-Slot Hotbar Frame (Integer scaled 2x) */}
+      <div className="relative flex items-center mc-hotbar-frame p-[2px] gap-[2px]">
         {BIOMES.map((biome, idx) => {
           const isSelected = selectedSlot === idx;
 
@@ -65,20 +65,23 @@ export const Hotbar: React.FC = () => {
               onClick={() => handleSelect(idx)}
               onMouseEnter={() => setHoveredSlot(idx)}
               onMouseLeave={() => setHoveredSlot(null)}
-              className={`relative w-11 h-11 flex items-center justify-center cursor-pointer transition-transform duration-100 ${
-                isSelected
-                  ? 'scale-[1.08] z-20 border-[3px] border-white bg-black/60 shadow-lg'
-                  : 'bg-[#2b2b2b]/90 border border-[#3b3b3b] hover:bg-[#3d3d3d]'
+              className={`relative mc-hotbar-slot flex items-center justify-center cursor-pointer transition-none ${
+                isSelected ? 'z-20' : 'hover:brightness-110'
               }`}
               title={slotTooltips[idx]}
             >
+              {/* Selected Slot Frame Border */}
+              {isSelected && (
+                <div className="absolute -inset-[3px] border-[3px] border-white outline outline-1 outline-black pointer-events-none z-30" />
+              )}
+
               {/* Corner Slot Number */}
-              <span className="absolute top-[2px] left-[3px] font-pixel text-[8px] text-[#AAAAAA] leading-none pointer-events-none">
+              <span className="absolute top-[2px] left-[3px] font-pixel text-[8px] text-[#FFFFFF] drop-shadow-[1px_1px_0_#373737] leading-none pointer-events-none z-10">
                 {idx + 1}
               </span>
 
               {/* Slot Icon */}
-              <div className="w-7 h-7 flex items-center justify-center pointer-events-none">
+              <div className="w-7 h-7 flex items-center justify-center pointer-events-none z-10">
                 {idx === 0 && <img src="/items/diamond_pickaxe.png" alt="Pickaxe" className="w-6 h-6 pixelated" />}
                 {idx === 1 && (
                   avatarUrl ? (
@@ -98,9 +101,9 @@ export const Hotbar: React.FC = () => {
                 {idx === 8 && <img src="/items/ender_eye.png" alt="Eye" className="w-6 h-6 pixelated" />}
               </div>
 
-              {/* Tooltip on hover */}
+              {/* Tooltip on hover (Vanilla dark purple-blue border, offset text shadow) */}
               {hoveredSlot === idx && (
-                <div className="absolute -top-9 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#100f1c]/95 border border-[#4d4870] px-2 py-1 font-pixel text-[9px] text-[#e0b0ff] shadow-xl pointer-events-none z-30">
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap mc-tooltip pointer-events-none z-40">
                   {slotTooltips[idx]}
                 </div>
               )}

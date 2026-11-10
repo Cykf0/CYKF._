@@ -93,12 +93,12 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
     };
   }, [armWidth]);
 
-  // Materials
+  // Materials - Pure Vanilla Matte Shading
   const baseMaterial = useMemo(() => {
     return new THREE.MeshStandardMaterial({
       map: skinData?.texture || null,
-      roughness: 0.85,
-      metalness: 0.05,
+      roughness: 1.0,
+      metalness: 0.0,
       alphaTest: 0.1,
     });
   }, [skinData]);
@@ -106,8 +106,8 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
   const overlayMaterial = useMemo(() => {
     return new THREE.MeshStandardMaterial({
       map: skinData?.texture || null,
-      roughness: 0.85,
-      metalness: 0.05,
+      roughness: 1.0,
+      metalness: 0.0,
       transparent: true,
       alphaTest: 0.5,
       side: THREE.DoubleSide,

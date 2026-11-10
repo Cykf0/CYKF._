@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "skin": "node scripts/fetch-skin.mjs",
+    "atlas": "node scripts/build-atlas.mjs",
     "audit:interactions": "node scripts/coverage-audit.mjs"
   },
   "dependencies": {

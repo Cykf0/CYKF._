@@ -1,12 +1,22 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { sounds } from '../audio/soundManager';
 import { Interactable } from '../interaction/Interactable';
 import { useStore } from '../store';
+import { vanillaAtlas } from './VanillaTextureAtlas';
+
+function createMobTexture(name: string, width: number, height: number, drawFn: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
+  return vanillaAtlas.getStandaloneTexture(`${name}_${width}x${height}`, (ctx) => {
+    ctx.canvas.width = width;
+    ctx.canvas.height = height;
+    ctx.imageSmoothingEnabled = false;
+    drawFn(ctx);
+  });
+}
 
 /**
- * 3D Low-Poly Minecraft Sheep
+ * 3D Minecraft Sheep with textured wool and shearing mechanic
  */
 export const Sheep: React.FC<{
   position?: [number, number, number];
@@ -19,6 +29,69 @@ export const Sheep: React.FC<{
 }) => {
   const headRef = useRef<THREE.Group>(null);
   const [isSheared, setIsSheared] = useState(false);
+
+  // Curly wool texture (NearestFilter)
+  const woolMaterial = useMemo(() => {
+    const tex = createMobTexture('sheep_wool', 16, 16, (ctx) => {
+      const shades = ['#EAEAEA', '#DFDFDF', '#D0D0D0', '#F2F2F2'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          const isDarker = (x % 3 === 0 && y % 3 === 0) || (x % 4 === 2 && y % 4 === 2);
+          ctx.fillStyle = isDarker ? '#C2C2C2' : shades[(x * 5 + y * 7) % shades.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      color: woolColor,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, [woolColor]);
+
+  // Sheep face texture (Tan snout, black eyes, white cap)
+  const faceMaterial = useMemo(() => {
+    const tex = createMobTexture('sheep_face', 16, 16, (ctx) => {
+      ctx.fillStyle = '#E5C7B0'; // Tan skin
+      ctx.fillRect(0, 0, 16, 16);
+      // White wool top cap
+      ctx.fillStyle = '#EAEAEA';
+      ctx.fillRect(0, 0, 16, 6);
+      // Black eyes with white sclera
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(2, 7, 3, 2);
+      ctx.fillRect(11, 7, 3, 2);
+      ctx.fillStyle = '#111111';
+      ctx.fillRect(3, 7, 2, 2);
+      ctx.fillRect(11, 7, 2, 2);
+      // Pink nostrils
+      ctx.fillStyle = '#BC8B76';
+      ctx.fillRect(6, 13, 2, 1);
+      ctx.fillRect(8, 13, 2, 1);
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
+
+  // Sheep skin/leg material
+  const skinMaterial = useMemo(() => {
+    const tex = createMobTexture('sheep_skin', 8, 8, (ctx) => {
+      ctx.fillStyle = '#E5C7B0';
+      ctx.fillRect(0, 0, 8, 8);
+      // Dark hooves at bottom
+      ctx.fillStyle = '#332E2A';
+      ctx.fillRect(0, 6, 8, 2);
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
@@ -50,41 +123,31 @@ export const Sheep: React.FC<{
       scale={0.4}
     >
       {/* Wool Body */}
-      <mesh position={[0, 1.2, 0]} castShadow>
+      <mesh position={[0, 1.2, 0]} material={isSheared ? skinMaterial : woolMaterial} castShadow>
         <boxGeometry args={[1.8, isSheared ? 1.0 : 1.4, 2.2]} />
-        <meshStandardMaterial color={isSheared ? '#D4B895' : woolColor} roughness={0.9} />
       </mesh>
 
       {/* Head */}
       <group ref={headRef} position={[0, 1.5, 1.3]}>
-        <mesh position={[0, 0.2, 0]}>
+        {/* Head Wool Top */}
+        <mesh position={[0, 0.2, 0]} material={woolMaterial}>
           <boxGeometry args={[1.0, 1.0, 1.0]} />
-          <meshStandardMaterial color={woolColor} roughness={0.9} />
         </mesh>
-        <mesh position={[0, 0, 0.35]}>
+        {/* Head Snout Face */}
+        <mesh position={[0, 0, 0.35]} material={faceMaterial}>
           <boxGeometry args={[0.8, 0.7, 0.7]} />
-          <meshStandardMaterial color="#E5C7B0" roughness={0.8} />
-        </mesh>
-        <mesh position={[-0.32, 0.1, 0.71]}>
-          <planeGeometry args={[0.15, 0.15]} />
-          <meshBasicMaterial color="#111111" />
-        </mesh>
-        <mesh position={[0.32, 0.1, 0.71]}>
-          <planeGeometry args={[0.15, 0.15]} />
-          <meshBasicMaterial color="#111111" />
         </mesh>
       </group>
 
-      {/* 4 Legs */}
+      {/* 4 Legs with hooves */}
       {[
         [-0.6, 0.45, -0.7],
         [0.6, 0.45, -0.7],
         [-0.6, 0.45, 0.7],
         [0.6, 0.45, 0.7],
       ].map(([lx, ly, lz], i) => (
-        <mesh key={i} position={[lx, ly, lz]} castShadow>
+        <mesh key={i} position={[lx, ly, lz]} material={skinMaterial} castShadow>
           <boxGeometry args={[0.4, 0.9, 0.4]} />
-          <meshStandardMaterial color="#E5C7B0" roughness={0.9} />
         </mesh>
       ))}
     </Interactable>
@@ -92,7 +155,7 @@ export const Sheep: React.FC<{
 };
 
 /**
- * 3D Minecraft Villager (Trades Scene)
+ * 3D Minecraft Villager with 3D Nose, Robe and Emerald Eyes
  */
 export const Villager: React.FC<{
   position?: [number, number, number];
@@ -100,6 +163,47 @@ export const Villager: React.FC<{
   onInteract?: () => void;
 }> = ({ position = [0, 0, 0], rotation = [0, 0, 0], onInteract }) => {
   const headRef = useRef<THREE.Group>(null);
+
+  // Villager face texture
+  const villagerFaceMaterial = useMemo(() => {
+    const tex = createMobTexture('villager_face', 16, 16, (ctx) => {
+      ctx.fillStyle = '#C8966E'; // Tan skin
+      ctx.fillRect(0, 0, 16, 16);
+      // Unibrow
+      ctx.fillStyle = '#3D2616';
+      ctx.fillRect(4, 5, 8, 2);
+      // Emerald Green Eyes
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(3, 7, 3, 2);
+      ctx.fillRect(10, 7, 3, 2);
+      ctx.fillStyle = '#1B9942'; // Green iris
+      ctx.fillRect(4, 7, 2, 2);
+      ctx.fillRect(10, 7, 2, 2);
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
+
+  // Villager brown robe material
+  const robeMaterial = useMemo(() => {
+    const tex = createMobTexture('villager_robe', 16, 16, (ctx) => {
+      const brown = ['#557A46', '#48683B', '#3E5A32', '#628C51'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = brown[(x * 5 + y * 7) % brown.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
 
   useFrame((state, delta) => {
     if (headRef.current) {
@@ -129,67 +233,79 @@ export const Villager: React.FC<{
     >
       {/* Head Pivot at y=24 */}
       <group ref={headRef} position={[0, 24, 0]}>
-        <mesh position={[0, 5, 0]} castShadow>
+        {/* Head Box */}
+        <mesh position={[0, 5, 0]} material={villagerFaceMaterial} castShadow>
           <boxGeometry args={[8, 10, 8]} />
-          <meshStandardMaterial color="#C8966E" roughness={0.8} />
         </mesh>
+        {/* 3D Nose (2x4x2) */}
         <mesh position={[0, 3, 4.8]} castShadow>
           <boxGeometry args={[2, 4, 2]} />
-          <meshStandardMaterial color="#BA835C" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 6.2, 4.05]}>
-          <planeGeometry args={[6, 1.2]} />
-          <meshBasicMaterial color="#3D2616" />
-        </mesh>
-        <mesh position={[-2, 4.8, 4.05]}>
-          <planeGeometry args={[1.4, 1.2]} />
-          <meshBasicMaterial color="#1B9942" />
-        </mesh>
-        <mesh position={[2, 4.8, 4.05]}>
-          <planeGeometry args={[1.4, 1.2]} />
-          <meshBasicMaterial color="#1B9942" />
+          <meshBasicMaterial color="#BA835C" />
         </mesh>
       </group>
 
       {/* Robe Body */}
-      <mesh position={[0, 14, 0]} castShadow>
+      <mesh position={[0, 14, 0]} material={robeMaterial} castShadow>
         <boxGeometry args={[9, 14, 6]} />
-        <meshStandardMaterial color="#557A46" roughness={0.85} />
       </mesh>
 
-      {/* Crossed Arms */}
-      <mesh position={[0, 16, 3.5]} castShadow>
+      {/* Crossed Folded Arms */}
+      <mesh position={[0, 16, 3.5]} material={robeMaterial} castShadow>
         <boxGeometry args={[10, 4, 4]} />
-        <meshStandardMaterial color="#446237" roughness={0.85} />
       </mesh>
 
       {/* Bottom Robe Skirt */}
       <mesh position={[0, 5, 0]} castShadow>
         <boxGeometry args={[9, 8, 6]} />
-        <meshStandardMaterial color="#4A3423" roughness={0.9} />
+        <meshBasicMaterial color="#4A3423" />
       </mesh>
     </Interactable>
   );
 };
 
 /**
- * 3D Minecraft Enderman (The End Scene)
+ * 3D Minecraft Enderman with animated mouth and purple glowing eyes
  */
 export const Enderman: React.FC<{
   position?: [number, number, number];
   rotation?: [number, number, number];
 }> = ({ position = [0, 0, 0], rotation = [0, 0, 0] }) => {
   const headRef = useRef<THREE.Group>(null);
+  const jawRef = useRef<THREE.Group>(null);
+  const [isAggro, setIsAggro] = useState(false);
+
+  // Enderman mottled black skin texture
+  const endermanMaterial = useMemo(() => {
+    const tex = createMobTexture('enderman_skin', 16, 16, (ctx) => {
+      const darks = ['#121216', '#17171d', '#0d0d10', '#1c1c24'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = darks[(x * 7 + y * 13) % darks.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
 
   useFrame((state, delta) => {
     if (headRef.current) {
       const mouse = state.pointer;
       headRef.current.rotation.y = THREE.MathUtils.damp(headRef.current.rotation.y, -mouse.x * 0.4, 5, delta);
     }
+    if (jawRef.current) {
+      const targetY = isAggro ? -2.5 : 0;
+      jawRef.current.position.y = THREE.MathUtils.damp(jawRef.current.position.y, targetY, 8, delta);
+    }
   });
 
   const handleClick = () => {
     sounds.playEndermanVwoop();
+    setIsAggro(!isAggro);
     useStore.getState().recordDiscovery('mob_enderman_vwoop', 'MOB', 'Enderman Teleport');
   };
 
@@ -205,45 +321,47 @@ export const Enderman: React.FC<{
     >
       {/* Head */}
       <group ref={headRef} position={[0, 40, 0]}>
-        <mesh castShadow>
-          <boxGeometry args={[8, 8, 8]} />
-          <meshStandardMaterial color="#0E0E12" roughness={0.9} />
+        {/* Upper Head */}
+        <mesh position={[0, 2, 0]} material={endermanMaterial} castShadow>
+          <boxGeometry args={[8, 6, 8]} />
         </mesh>
+        {/* Lower Animated Jaw (Opens downwards on aggro!) */}
+        <group ref={jawRef} position={[0, -2, 0]}>
+          <mesh material={endermanMaterial} castShadow>
+            <boxGeometry args={[8, 3, 8]} />
+          </mesh>
+        </group>
+        {/* Glowing Purple Eyes */}
         <mesh position={[-2.2, 0.5, 4.05]}>
           <planeGeometry args={[2.0, 0.8]} />
-          <meshBasicMaterial color="#CC44FF" />
+          <meshBasicMaterial color="#E079FA" />
         </mesh>
         <mesh position={[2.2, 0.5, 4.05]}>
           <planeGeometry args={[2.0, 0.8]} />
-          <meshBasicMaterial color="#CC44FF" />
+          <meshBasicMaterial color="#E079FA" />
         </mesh>
         <pointLight color="#CC44FF" intensity={0.8} distance={5} position={[0, 0.5, 4.5]} />
       </group>
 
       {/* Slender Body */}
-      <mesh position={[0, 27, 0]} castShadow>
+      <mesh position={[0, 27, 0]} material={endermanMaterial} castShadow>
         <boxGeometry args={[6, 18, 4]} />
-        <meshStandardMaterial color="#0A0A0E" roughness={0.9} />
       </mesh>
 
-      {/* Long Slender Arms */}
-      <mesh position={[-4, 20, 0]} castShadow>
+      {/* Long Slender Arms (2x30x2) */}
+      <mesh position={[-4, 20, 0]} material={endermanMaterial} castShadow>
         <boxGeometry args={[2, 30, 2]} />
-        <meshStandardMaterial color="#0A0A0E" roughness={0.9} />
       </mesh>
-      <mesh position={[4, 20, 0]} castShadow>
+      <mesh position={[4, 20, 0]} material={endermanMaterial} castShadow>
         <boxGeometry args={[2, 30, 2]} />
-        <meshStandardMaterial color="#0A0A0E" roughness={0.9} />
       </mesh>
 
-      {/* Long Slender Legs */}
-      <mesh position={[-1.5, 9, 0]} castShadow>
-        <boxGeometry args={[2, 22, 2]} />
-        <meshStandardMaterial color="#0A0A0E" roughness={0.9} />
+      {/* Long Slender Legs (2x30x2) */}
+      <mesh position={[-1.5, 9, 0]} material={endermanMaterial} castShadow>
+        <boxGeometry args={[2, 30, 2]} />
       </mesh>
-      <mesh position={[1.5, 9, 0]} castShadow>
-        <boxGeometry args={[2, 22, 2]} />
-        <meshStandardMaterial color="#0A0A0E" roughness={0.9} />
+      <mesh position={[1.5, 9, 0]} material={endermanMaterial} castShadow>
+        <boxGeometry args={[2, 30, 2]} />
       </mesh>
     </Interactable>
   );
@@ -252,21 +370,34 @@ export const Enderman: React.FC<{
 /**
  * 3D Minecraft Axolotl (Lush Caves Scene)
  */
-export const Axolotl: React.FC<{ position?: [number, number, number] }> = ({
-  position = [0, 0, 0]
-}) => {
-  const axolotlRef = useRef<THREE.Group>(null);
+export const Axolotl: React.FC<{
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+}> = ({ position = [0, 0, 0], rotation = [0, 0, 0] }) => {
   const tailRef = useRef<THREE.Mesh>(null);
+
+  // Pink Axolotl texture
+  const axolotlMaterial = useMemo(() => {
+    const tex = createMobTexture('axolotl_skin', 16, 16, (ctx) => {
+      const pinks = ['#fbc1e3', '#f5b0d8', '#fecde8', '#efa0cd'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = pinks[(x * 7 + y * 11) % pinks.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    if (axolotlRef.current) {
-      axolotlRef.current.position.x = position[0] + Math.sin(t * 0.8) * 0.8;
-      axolotlRef.current.position.z = position[2] + Math.cos(t * 0.8) * 0.8;
-      axolotlRef.current.rotation.y = t * 0.8 + Math.PI / 2;
-    }
     if (tailRef.current) {
-      tailRef.current.rotation.y = Math.sin(t * 4) * 0.35;
+      tailRef.current.rotation.y = Math.sin(t * 5) * 0.35;
     }
   });
 
@@ -282,30 +413,46 @@ export const Axolotl: React.FC<{ position?: [number, number, number] }> = ({
       category="MOB"
       onClick={handleClick}
       position={position}
-      scale={0.35}
+      rotation={rotation}
+      scale={0.07}
     >
-      <group ref={axolotlRef}>
-        <mesh castShadow>
-          <boxGeometry args={[0.8, 0.4, 1.4]} />
-          <meshStandardMaterial color="#FFB6C1" roughness={0.6} />
-        </mesh>
-        <mesh position={[0, 0.05, 0.85]} castShadow>
-          <boxGeometry args={[1.0, 0.5, 0.6]} />
-          <meshStandardMaterial color="#FFB6C1" roughness={0.6} />
-        </mesh>
-        <mesh position={[-0.6, 0.2, 0.8]}>
-          <boxGeometry args={[0.3, 0.5, 0.2]} />
-          <meshStandardMaterial color="#FF1493" roughness={0.5} />
-        </mesh>
-        <mesh position={[0.6, 0.2, 0.8]}>
-          <boxGeometry args={[0.3, 0.5, 0.2]} />
-          <meshStandardMaterial color="#FF1493" roughness={0.5} />
-        </mesh>
-        <mesh ref={tailRef} position={[0, 0, -1.0]}>
-          <boxGeometry args={[0.2, 0.6, 0.8]} />
-          <meshStandardMaterial color="#FF69B4" roughness={0.6} />
-        </mesh>
-      </group>
+      {/* Head */}
+      <mesh position={[0, 0, 4]} material={axolotlMaterial} castShadow>
+        <boxGeometry args={[8, 5, 5]} />
+      </mesh>
+      {/* Gills (Left & Right) */}
+      <mesh position={[-4.5, 1, 3]}>
+        <boxGeometry args={[2, 4, 1]} />
+        <meshBasicMaterial color="#DB4F8D" />
+      </mesh>
+      <mesh position={[4.5, 1, 3]}>
+        <boxGeometry args={[2, 4, 1]} />
+        <meshBasicMaterial color="#DB4F8D" />
+      </mesh>
+
+      {/* Body */}
+      <mesh position={[0, 0, -2]} material={axolotlMaterial} castShadow>
+        <boxGeometry args={[7, 4, 10]} />
+      </mesh>
+
+      {/* Animated Swimming Tail */}
+      <mesh ref={tailRef} position={[0, 0, -8]} material={axolotlMaterial} castShadow>
+        <boxGeometry args={[2, 5, 8]} />
+      </mesh>
+
+      {/* 4 Splayed Legs */}
+      <mesh position={[-4, -1.5, 1]} material={axolotlMaterial}>
+        <boxGeometry args={[3, 2, 3]} />
+      </mesh>
+      <mesh position={[4, -1.5, 1]} material={axolotlMaterial}>
+        <boxGeometry args={[3, 2, 3]} />
+      </mesh>
+      <mesh position={[-4, -1.5, -4]} material={axolotlMaterial}>
+        <boxGeometry args={[3, 2, 3]} />
+      </mesh>
+      <mesh position={[4, -1.5, -4]} material={axolotlMaterial}>
+        <boxGeometry args={[3, 2, 3]} />
+      </mesh>
     </Interactable>
   );
 };

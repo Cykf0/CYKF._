@@ -33,10 +33,10 @@ export const StatusBars: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center gap-1 select-none pointer-events-auto">
-      {/* Hearts & Hunger Row */}
-      <div className="w-[382px] flex items-center justify-between px-1">
+      {/* Hearts & Hunger Row (Matches 364px hotbar width exactly) */}
+      <div className="w-[364px] flex items-center justify-between px-[2px]">
         {/* 10 Interactive Hearts (Left) */}
-        <div className={`flex items-center gap-1 transition-all ${isHurt ? 'brightness-200 scale-105' : ''}`}>
+        <div className={`flex items-center gap-[2px] transition-all ${isHurt ? 'brightness-200 scale-105' : ''}`}>
           {Array.from({ length: 10 }).map((_, i) => (
             <button
               key={i}
@@ -44,13 +44,13 @@ export const StatusBars: React.FC = () => {
               className="cursor-pointer hover:scale-125 transition-transform"
               title={`Heart ${i + 1} (Click to pop!)`}
             >
-              <HeartIcon filled={i < hearts} className="w-3.5 h-3.5" />
+              <HeartIcon filled={i < hearts} className="w-4 h-4" />
             </button>
           ))}
         </div>
 
         {/* 10 Interactive Hunger Drumsticks (Right) */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-[2px]">
           {Array.from({ length: 10 }).map((_, i) => (
             <button
               key={i}
@@ -58,7 +58,7 @@ export const StatusBars: React.FC = () => {
               className="cursor-pointer hover:scale-125 transition-transform"
               title={`Hunger ${i + 1} (Click to eat!)`}
             >
-              <HungerIcon filled={i < hunger} className="w-3.5 h-3.5" />
+              <HungerIcon filled={i < hunger} className="w-4 h-4" />
             </button>
           ))}
         </div>
@@ -68,15 +68,15 @@ export const StatusBars: React.FC = () => {
       <div
         onClick={handleXpClick}
         title="Experience Bar (Click to gain XP!)"
-        className="relative w-[382px] cursor-pointer group flex flex-col items-center"
+        className="relative w-[364px] cursor-pointer group flex flex-col items-center"
       >
         {/* Level Number */}
         <div className="font-pixel text-[11px] text-[#80FF20] font-bold mb-0.5 tracking-wider drop-shadow-[0_2px_0_#000000] [text-shadow:1px_1px_0_#000,-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000] group-hover:scale-110 transition-transform">
           {xpLevel}
         </div>
 
-        {/* Bar Track */}
-        <div className="w-full h-[5px] bg-[#1a2d12] border border-black/80 rounded-[1px] overflow-hidden p-[1px]">
+        {/* Bar Track (182px * 2 = 364px) */}
+        <div className="w-full h-[6px] bg-[#1a2d12] border border-black overflow-hidden p-0">
           {/* Green Bar Fill */}
           <div
             className="h-full bg-gradient-to-r from-[#55FF55] to-[#80FF20] transition-all duration-300 ease-out"

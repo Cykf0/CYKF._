@@ -90,3 +90,75 @@
   border: 3px solid #6E5334;
   box-shadow: inset 1px 1px 0 #FFF0D4, inset -1px -1px 0 #4A3319, 0 12px 35px rgba(0,0,0,0.6);
 }
+
+/* Vanilla Minecraft Tooltip */
+.mc-tooltip {
+  background-color: #100010;
+  border: 2px solid #5000ff;
+  outline: 2px solid #100010;
+  box-shadow: 0 0 0 2px #28007f;
+  color: #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  text-shadow: 1px 1px 0 #3f3f3f;
+  padding: 4px 8px;
+  image-rendering: pixelated;
+  border-radius: 0;
+}
+
+/* Vanilla Hotbar Container */
+.mc-hotbar-frame {
+  width: 364px;
+  height: 44px;
+  background-color: #8f8f8f;
+  border: 2px solid #373737;
+  border-top-color: #c6c6c6;
+  border-left-color: #c6c6c6;
+  box-shadow: inset 1px 1px 0 #ffffff, inset -1px -1px 0 #373737, 0 8px 24px rgba(0, 0, 0, 0.6);
+  image-rendering: pixelated;
+}
+
+/* Vanilla Hotbar Slot */
+.mc-hotbar-slot {
+  width: 40px;
+  height: 40px;
+  background-color: #8b8b8b;
+  border: 2px solid #373737;
+  border-right-color: #ffffff;
+  border-bottom-color: #ffffff;
+  box-shadow: inset 1px 1px 0 #373737;
+  image-rendering: pixelated;
+}
+
+/* Vanilla Hotbar Selected Slot */
+.mc-hotbar-selected {
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border: 4px solid #ffffff;
+  outline: 2px solid #222222;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  z-index: 30;
+  image-rendering: pixelated;
+}
+
+/* Vanilla Container/Chest Inventory 9-slice Style */
+.mc-container-panel {
+  background-color: #c6c6c6;
+  border: 3px solid #ffffff;
+  border-right-color: #555555;
+  border-bottom-color: #555555;
+  box-shadow: inset 2px 2px 0 #dbdbdb, inset -2px -2px 0 #373737, 0 12px 36px rgba(0, 0, 0, 0.7);
+  image-rendering: pixelated;
+}
+
+/* Minecraft Text Shadow Utility */
+.mc-text-shadow {
+  text-shadow: 1px 1px 0 #3f3f3f;
+}
+
+.mc-text-shadow-strong {
+  text-shadow: 1px 1px 0 #000000, -1px -1px 0 #000000, 1px -1px 0 #000000, -1px 1px 0 #000000;
+}

@@ -4,20 +4,22 @@ import { useFrame } from '@react-three/fiber';
 import { Interactable } from '../interaction/Interactable';
 import { sounds } from '../audio/soundManager';
 import { useStore } from '../store';
+import { blockMaterials } from './blockMaterials';
 
 /**
- * Animated Foliage / Leaves with wind sway and backlit translucency
+ * Animated Foliage / Leaves with wind sway and pure vanilla cutout look
  */
 export const WindSwayLeaves: React.FC<{
   position: [number, number, number];
   size?: [number, number, number];
   color?: string;
+  isCherry?: boolean;
   swaySpeed?: number;
   swayAmount?: number;
 }> = ({
   position,
   size = [1, 1, 1],
-  color = '#F4A6B8',
+  isCherry = true,
   swaySpeed = 2.5,
   swayAmount = 0.04,
 }) => {
@@ -42,20 +44,20 @@ export const WindSwayLeaves: React.FC<{
         useStore.getState().recordDiscovery('plant_leaves', 'PLANT', 'Cherry Leaves Flutter');
       }}
     >
-      <mesh ref={meshRef} castShadow receiveShadow>
+      <mesh
+        ref={meshRef}
+        material={isCherry ? blockMaterials.cherryLeaves : blockMaterials.oakLeaves}
+        castShadow
+        receiveShadow
+      >
         <boxGeometry args={size} />
-        <meshStandardMaterial
-          color={color}
-          roughness={0.65}
-          metalness={0.05}
-        />
       </mesh>
     </Interactable>
   );
 };
 
 /**
- * Instanced Tall Grass & Wildflowers with Wind Sway
+ * Instanced Tall Grass & Wildflowers with Wind Sway and Cutout Crossed Quads
  */
 export const InstancedGrassField: React.FC<{
   count?: number;
@@ -66,7 +68,6 @@ export const InstancedGrassField: React.FC<{
   count = 60,
   area = [12, 12],
   baseColor = '#6AA836',
-  flowerColor = '#F4A6B8',
 }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
@@ -122,9 +123,10 @@ export const InstancedGrassField: React.FC<{
         <planeGeometry args={[0.3, 0.5]} />
         <meshStandardMaterial
           color={baseColor}
-          roughness={0.8}
+          roughness={1.0}
+          metalness={0.0}
           side={THREE.DoubleSide}
-          alphaTest={0.4}
+          alphaTest={0.5}
         />
       </instancedMesh>
     </Interactable>

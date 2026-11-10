@@ -1,12 +1,25 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { sounds } from '../audio/soundManager';
 import { Interactable } from '../interaction/Interactable';
 import { useStore } from '../store';
+import { vanillaAtlas } from './VanillaTextureAtlas';
 
 /**
- * 3D Interactive Minecraft Chest with animated open lid
+ * Helper to create crisp NearestFilter entity texture
+ */
+function createEntityTexture(name: string, width: number, height: number, drawFn: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
+  return vanillaAtlas.getStandaloneTexture(`${name}_${width}x${height}`, (ctx) => {
+    ctx.canvas.width = width;
+    ctx.canvas.height = height;
+    ctx.imageSmoothingEnabled = false;
+    drawFn(ctx);
+  });
+}
+
+/**
+ * 3D Interactive Minecraft Chest with animated open lid & authentic vanilla texture
  */
 export const Chest3D: React.FC<{
   position?: [number, number, number];
@@ -15,6 +28,43 @@ export const Chest3D: React.FC<{
 }> = ({ position = [0, 0, 0], rotation = [0, 0, 0], initiallyOpen = false }) => {
   const [isOpen, setIsOpen] = useState(initiallyOpen);
   const lidRef = useRef<THREE.Group>(null);
+
+  // Vanilla Chest Texture (Wood planks + dark iron bands)
+  const chestWoodMaterial = useMemo(() => {
+    const tex = createEntityTexture('chest_wood', 16, 16, (ctx) => {
+      const wood = ['#a06935', '#8b562b', '#724420', '#b87c44'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          const isIron = y === 0 || y === 15 || x === 0 || x === 15;
+          ctx.fillStyle = isIron ? '#2b2621' : wood[(x * 7 + y * 13) % wood.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
+
+  // Silver Latch Material
+  const latchMaterial = useMemo(() => {
+    const tex = createEntityTexture('chest_latch', 4, 8, (ctx) => {
+      const silver = ['#e6e6e6', '#cccccc', '#999999', '#777777'];
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 4; x++) {
+          ctx.fillStyle = (y >= 4) ? '#333333' : silver[(x + y) % silver.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.8,
+      metalness: 0.2,
+    });
+  }, []);
 
   useFrame((_, delta) => {
     if (lidRef.current) {
@@ -40,12 +90,12 @@ export const Chest3D: React.FC<{
       scale={0.5}
       onClick={toggleChest}
     >
-      {/* Chest Base */}
-      <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
+      {/* Chest Base (14x10x14 voxel box) */}
+      <mesh position={[0, 0.4, 0]} material={chestWoodMaterial} castShadow receiveShadow>
         <boxGeometry args={[1.6, 0.8, 1.6]} />
-        <meshStandardMaterial color="#8B5A2B" roughness={0.8} />
       </mesh>
-      {/* Base Inner Black Hole */}
+
+      {/* Base Inner Dark Hole */}
       <mesh position={[0, 0.45, 0]}>
         <boxGeometry args={[1.4, 0.7, 1.4]} />
         <meshBasicMaterial color="#111111" />
@@ -53,15 +103,13 @@ export const Chest3D: React.FC<{
 
       {/* Chest Animated Lid (Hinged at back z=-0.7, y=0.8) */}
       <group ref={lidRef} position={[0, 0.8, -0.7]}>
-        {/* Lid Top Box centered at z=+0.7 relative to hinge */}
-        <mesh position={[0, 0.2, 0.7]} castShadow>
+        {/* Lid Top Box (14x5x14 voxel box) centered at z=+0.7 relative to hinge */}
+        <mesh position={[0, 0.2, 0.7]} material={chestWoodMaterial} castShadow>
           <boxGeometry args={[1.6, 0.4, 1.6]} />
-          <meshStandardMaterial color="#A06935" roughness={0.8} />
         </mesh>
-        {/* Silver Latch at front */}
-        <mesh position={[0, 0.05, 1.55]} castShadow>
+        {/* Silver Latch at front (2x4x1 voxel box) */}
+        <mesh position={[0, 0.05, 1.55]} material={latchMaterial} castShadow>
           <boxGeometry args={[0.2, 0.35, 0.1]} />
-          <meshStandardMaterial color="#CCCCCC" metalness={0.9} roughness={0.3} />
         </mesh>
       </group>
     </Interactable>
@@ -79,8 +127,44 @@ export const EnchantingTable3D: React.FC<{
   const rightPageRef = useRef<THREE.Group>(null);
   const glyphsRef = useRef<THREE.Points>(null);
 
-  // Generate random glyph particle positions
-  const glyphParticles = React.useMemo(() => {
+  // Obsidian base material
+  const obsidianBaseMaterial = useMemo(() => {
+    const tex = createEntityTexture('enchant_obsidian', 16, 16, (ctx) => {
+      const obs = ['#151020', '#1c152d', '#110c1c', '#271d3f'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = obs[(x * 19 + y * 13) % obs.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
+
+  // Red velvet cloth top
+  const clothMaterial = useMemo(() => {
+    const tex = createEntityTexture('enchant_cloth', 16, 16, (ctx) => {
+      const reds = ['#8f1c1c', '#a82424', '#781515'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = reds[(x * 5 + y * 7) % reds.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
+
+  // Generate glyph particle positions
+  const glyphParticles = useMemo(() => {
     const count = 30;
     const positions = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -122,15 +206,13 @@ export const EnchantingTable3D: React.FC<{
       onClick={handleTableClick}
     >
       {/* Obsidian Table Base (3/4 block high = 0.75) */}
-      <mesh position={[0, 0.375, 0]} castShadow receiveShadow>
+      <mesh position={[0, 0.375, 0]} material={obsidianBaseMaterial} castShadow receiveShadow>
         <boxGeometry args={[1.5, 0.75, 1.5]} />
-        <meshStandardMaterial color="#191522" roughness={0.8} />
       </mesh>
 
       {/* Red Diamond Velvet Cloth Top */}
-      <mesh position={[0, 0.76, 0]}>
+      <mesh position={[0, 0.76, 0]} material={clothMaterial}>
         <boxGeometry args={[1.4, 0.04, 1.4]} />
-        <meshStandardMaterial color="#991515" roughness={0.7} />
       </mesh>
 
       {/* 4 Diamond Corners */}
@@ -142,7 +224,7 @@ export const EnchantingTable3D: React.FC<{
       ].map(([cx, cy, cz], idx) => (
         <mesh key={idx} position={[cx, cy, cz]}>
           <boxGeometry args={[0.22, 0.22, 0.22]} />
-          <meshStandardMaterial color="#55FFFF" roughness={0.2} metalness={0.8} />
+          <meshBasicMaterial color="#55FFFF" />
         </mesh>
       ))}
 
@@ -157,20 +239,20 @@ export const EnchantingTable3D: React.FC<{
       >
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[0.6, 3.2, 0.4]} />
-          <meshStandardMaterial color="#881B1B" roughness={0.6} />
+          <meshBasicMaterial color="#881B1B" />
         </mesh>
 
         <group ref={leftPageRef} position={[-0.3, 0, 0]} rotation={[0, -0.4, 0]}>
           <mesh position={[-1.2, 0, 0]}>
             <boxGeometry args={[2.4, 3.0, 0.15]} />
-            <meshStandardMaterial color="#F3E5C8" roughness={0.9} />
+            <meshBasicMaterial color="#F3E5C8" />
           </mesh>
         </group>
 
         <group ref={rightPageRef} position={[0.3, 0, 0]} rotation={[0, 0.4, 0]}>
           <mesh position={[1.2, 0, 0]}>
             <boxGeometry args={[2.4, 3.0, 0.15]} />
-            <meshStandardMaterial color="#F3E5C8" roughness={0.9} />
+            <meshBasicMaterial color="#F3E5C8" />
           </mesh>
         </group>
       </group>
@@ -190,7 +272,7 @@ export const EnchantingTable3D: React.FC<{
 };
 
 /**
- * 3D Campfire with animated voxel smoke and sparks (Snowy Peaks Scene)
+ * 3D Campfire with animated fire and smoke particles (Snowy Peaks Scene)
  */
 export const Campfire3D: React.FC<{
   position?: [number, number, number];
@@ -199,8 +281,26 @@ export const Campfire3D: React.FC<{
   const smokeRef = useRef<THREE.Points>(null);
   const [lit, setLit] = useState(true);
 
+  // Campfire log bark material
+  const logMaterial = useMemo(() => {
+    const tex = createEntityTexture('campfire_log', 16, 16, (ctx) => {
+      const bark = ['#46351d', '#584425', '#675230', '#3c2c16'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = bark[(x * 3 + y * 7) % bark.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
+
   // Smoke particles
-  const smokeParticles = React.useMemo(() => {
+  const smokeParticles = useMemo(() => {
     const count = 25;
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
@@ -246,21 +346,17 @@ export const Campfire3D: React.FC<{
       onClick={toggleCampfire}
     >
       {/* 4 Wooden Logs Base */}
-      <mesh position={[0, 0.12, 0.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <mesh position={[0, 0.12, 0.4]} rotation={[0, 0, Math.PI / 2]} material={logMaterial} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 1.2, 8]} />
-        <meshStandardMaterial color="#6B4423" roughness={0.9} />
       </mesh>
-      <mesh position={[0, 0.12, -0.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <mesh position={[0, 0.12, -0.4]} rotation={[0, 0, Math.PI / 2]} material={logMaterial} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 1.2, 8]} />
-        <meshStandardMaterial color="#6B4423" roughness={0.9} />
       </mesh>
-      <mesh position={[0.4, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+      <mesh position={[0.4, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]} material={logMaterial} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 1.2, 8]} />
-        <meshStandardMaterial color="#6B4423" roughness={0.9} />
       </mesh>
-      <mesh position={[-0.4, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+      <mesh position={[-0.4, 0.12, 0]} rotation={[Math.PI / 2, 0, 0]} material={logMaterial} castShadow>
         <cylinderGeometry args={[0.12, 0.12, 1.2, 8]} />
-        <meshStandardMaterial color="#6B4423" roughness={0.9} />
       </mesh>
 
       {/* Animated Fire Flame Voxels */}
@@ -306,6 +402,24 @@ export const EndCrystal3D: React.FC<{
   const innerCubeRef = useRef<THREE.Mesh>(null);
   const [active, setActive] = useState(true);
 
+  // Bedrock texture
+  const bedrockMaterial = useMemo(() => {
+    const tex = createEntityTexture('crystal_bedrock', 16, 16, (ctx) => {
+      const palette = ['#161616', '#262626', '#353535', '#0d0d0d'];
+      for (let y = 0; y < 16; y++) {
+        for (let x = 0; x < 16; x++) {
+          ctx.fillStyle = palette[(x * 11 + y * 17) % palette.length];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    });
+    return new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 1.0,
+      metalness: 0.0,
+    });
+  }, []);
+
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
     if (outerCubeRef.current) {
@@ -333,15 +447,14 @@ export const EndCrystal3D: React.FC<{
       onClick={toggleCrystal}
     >
       {/* Bedrock Base Plate */}
-      <mesh position={[0, 0.1, 0]}>
+      <mesh position={[0, 0.1, 0]} material={bedrockMaterial}>
         <boxGeometry args={[1.6, 0.2, 1.6]} />
-        <meshStandardMaterial color="#2B2B2B" roughness={0.9} />
       </mesh>
 
       {/* Outer Glass Cube */}
       <mesh ref={outerCubeRef} position={[0, 1.2, 0]}>
         <boxGeometry args={[1.2, 1.2, 1.2]} />
-        <meshStandardMaterial color="#FFFFFF" transparent opacity={0.35} roughness={0.1} />
+        <meshBasicMaterial color="#FFFFFF" transparent opacity={0.35} />
       </mesh>
 
       {/* Inner Glowing Purple Crystal Cube */}
@@ -363,4 +476,3 @@ export const EndCrystal3D: React.FC<{
     </Interactable>
   );
 };
-
