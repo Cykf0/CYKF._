@@ -1,0 +1,156 @@
+import { create } from 'zustand';
+
+export type QualityLevel = 'low' | 'med' | 'high';
+
+export interface BiomeMeta {
+  index: number;
+  id: string;
+  name: string;
+  color: string;
+  skyColor: string;
+  hash: string;
+  day: number;
+  time: string;
+  heldItem: string;
+}
+
+export const BIOMES: BiomeMeta[] = [
+  { index: 0, id: 'village-sunrise', name: 'Village', color: '#55FF55', skyColor: '#FFA756', hash: '#village', day: 1, time: '06:30', heldItem: 'diamond-pickaxe' },
+  { index: 1, id: 'cherry-grove', name: 'Cherry Grove', color: '#FFAACC', skyColor: '#FFAAC0', hash: '#profile', day: 1, time: '11:45', heldItem: 'none' },
+  { index: 2, id: 'stronghold', name: 'Stronghold', color: '#B388FF', skyColor: '#140A22', hash: '#enchantments', day: 1, time: '15:20', heldItem: 'book' },
+  { index: 3, id: 'mineshaft', name: 'Mineshaft', color: '#FFAA00', skyColor: '#120A05', hash: '#chest', day: 2, time: '18:10', heldItem: 'torch' },
+  { index: 4, id: 'snowy-peaks', name: 'Snowy Peaks', color: '#70C5FF', skyColor: '#82B2DD', hash: '#crafting', day: 2, time: '20:15', heldItem: 'compass' },
+  { index: 5, id: 'deep-dark', name: 'Deep Dark', color: '#00E5FF', skyColor: '#03070C', hash: '#advancements', day: 3, time: '00:40', heldItem: 'soul-lantern' },
+  { index: 6, id: 'village-interior', name: 'Village', color: '#55FF55', skyColor: '#22140A', hash: '#trades', day: 4, time: '13:00', heldItem: 'emerald' },
+  { index: 7, id: 'lush-caves', name: 'Lush Caves', color: '#55FF55', skyColor: '#0A2014', hash: '#connect', day: 5, time: '16:45', heldItem: 'feather' },
+  { index: 8, id: 'the-end', name: 'The End', color: '#D670D6', skyColor: '#080214', hash: '#end', day: 6, time: '21:50', heldItem: 'ender-pearl' }
+];
+
+interface AppState {
+  // Navigation & Scene
+  currentScene: number;
+  isTransitioning: boolean;
+  frontCameraView: boolean;
+  hoverTarget: string | null;
+
+  // Player Stats
+  xpLevel: number;
+  xpProgress: number; // 0 to 1
+  hearts: number;     // 10 max
+  hunger: number;     // 10 max
+  isHurt: boolean;
+
+  // World Simulation
+  inGameDay: number;
+  inGameTime: string;
+
+  // Settings & Audio
+  isMuted: boolean;
+  quality: QualityLevel;
+
+  // Actions
+  setScene: (index: number) => void;
+  nextScene: () => void;
+  prevScene: () => void;
+  setTransitioning: (val: boolean) => void;
+  toggleFrontCamera: () => void;
+  setHoverTarget: (target: string | null) => void;
+  toggleMute: () => void;
+  setQuality: (quality: QualityLevel) => void;
+  addXp: (amount: number) => void;
+  triggerHurt: () => void;
+  respawnToStart: () => void;
+}
+
+export const useStore = create<AppState>((set, get) => ({
+  currentScene: 0,
+  isTransitioning: false,
+  frontCameraView: false,
+  hoverTarget: null,
+
+  xpLevel: 5,
+  xpProgress: 0.45,
+  hearts: 10,
+  hunger: 10,
+  isHurt: false,
+
+  inGameDay: 1,
+  inGameTime: '06:30',
+
+  isMuted: typeof window !== 'undefined' ? localStorage.getItem('cykf_muted') === 'true' : false,
+  quality: 'high',
+
+  setScene: (index: number) => {
+    const clamped = Math.max(0, Math.min(8, index));
+    const biome = BIOMES[clamped];
+    if (typeof window !== 'undefined') {
+      window.location.hash = biome.hash;
+    }
+    
+    // Scale XP with scene progression (up to level 30 on The End)
+    const newLevel = [5, 7, 9, 13, 17, 21, 26, 28, 30][clamped] || 5;
+
+    set({
+      currentScene: clamped,
+      xpLevel: newLevel,
+      xpProgress: 0.1 + (clamped / 8) * 0.9,
+      inGameDay: biome.day,
+      inGameTime: biome.time,
+      isHurt: clamped === 5 // Deep Dark heart flutter
+    });
+  },
+
+  nextScene: () => {
+    const { currentScene, isTransitioning, setScene } = get();
+    if (!isTransitioning && currentScene < 8) {
+      setScene(currentScene + 1);
+    }
+  },
+
+  prevScene: () => {
+    const { currentScene, isTransitioning, setScene } = get();
+    if (!isTransitioning && currentScene > 0) {
+      setScene(currentScene - 1);
+    }
+  },
+
+  setTransitioning: (val: boolean) => set({ isTransitioning: val }),
+  toggleFrontCamera: () => set(state => ({ frontCameraView: !state.frontCameraView })),
+  setHoverTarget: (target: string | null) => set({ hoverTarget: target }),
+
+  toggleMute: () => set(state => {
+    const next = !state.isMuted;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cykf_muted', String(next));
+    }
+    return { isMuted: next };
+  }),
+
+  setQuality: (quality: QualityLevel) => set({ quality }),
+
+  addXp: (amount: number) => set(state => ({
+    xpLevel: state.xpLevel + amount
+  })),
+
+  triggerHurt: () => {
+    set({ isHurt: true, hearts: 9 });
+    setTimeout(() => set({ isHurt: false, hearts: 10 }), 600);
+  },
+
+  respawnToStart: () => {
+    const biome = BIOMES[0];
+    if (typeof window !== 'undefined') {
+      window.location.hash = biome.hash;
+    }
+    set({
+      currentScene: 0,
+      xpLevel: 5,
+      xpProgress: 0.2,
+      inGameDay: 1,
+      inGameTime: '06:30',
+      hearts: 10,
+      hunger: 10,
+      frontCameraView: false
+    });
+  }
+}));
