@@ -137,19 +137,19 @@ export const content: PortfolioContent = {
   enableCape: false,
   enableSkinSwap: true,
 
-  // Contact Info (Placeholders)
-  email: "TODO_YOUR_EMAIL@example.com",
-  location: "TODO_YOUR_LOCATION",
-  linkedin: "TODO_YOUR_LINKEDIN",
-  instagram: "TODO_YOUR_INSTAGRAM",
-  github: "TODO_YOUR_GITHUB",
+  // Contact Info
+  email: "sakshampanwar0312@gmail.com",
+  location: "GGN, Haryana",
+  linkedin: "https://www.linkedin.com/in/saksham-panwar-9847b3412/",
+  instagram: "https://instagram.com/cykf._",
+  github: "https://github.com/cykf",
 
   // Player Profile
-  bio: "TODO_SHORT_BIO: Full-Stack Developer & Creative Technologist crafting high-performance web applications and interactive 3D digital experiences.",
-  role: "TODO_ROLE (e.g. Full-Stack Developer)",
-  level: "TODO_LEVEL (e.g. 25 · Full Stack)",
-  server: "TODO_SERVER (e.g. Global · Web)",
-  status: "TODO_STATUS (e.g. Online · Open for contracts)",
+  bio: "Full-Stack Developer & Creative Technologist based in GGN, Haryana. Building high-performance web applications, interactive 3D voxel experiences, and modern software architectures.",
+  role: "Full-Stack Developer",
+  level: "Level 42 · Full Stack Architect",
+  server: "GGN · India · Global",
+  status: "Online · Open for contracts",
 
   // Exact 7 Skills from reference
   skills: [

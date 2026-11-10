@@ -3,27 +3,20 @@ import { content, ProjectItem } from '../content';
 import { ProjectModal } from '../hud/ProjectModal';
 import { useStore } from '../store';
 import { sounds } from '../audio/soundManager';
-import {
-  NetherStarIcon,
-  EmeraldIcon,
-  EnchantedBookIcon,
-  CompassIcon,
-  ChestIcon,
-  BookAndQuillIcon
-} from '../hud/PixelIcons';
+import { ItemIcon } from '../hud/PixelIcons';
 
 export const Scene04ChestPanel: React.FC = () => {
   const setScene = useStore((s) => s.setScene);
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(null);
   const [hoveredProject, setHoveredProject] = useState<ProjectItem | null>(null);
 
-  const icons = [
-    <NetherStarIcon className="w-5 h-5" />,
-    <EmeraldIcon className="w-5 h-5" />,
-    <EnchantedBookIcon className="w-5 h-5" />,
-    <CompassIcon className="w-5 h-5" />,
-    <ChestIcon className="w-5 h-5" />,
-    <BookAndQuillIcon className="w-5 h-5" />
+  const itemNames = [
+    'nether_star',
+    'potion',
+    'spyglass',
+    'compass',
+    'enchanted_book',
+    'diamond'
   ];
 
   return (
@@ -70,7 +63,7 @@ export const Scene04ChestPanel: React.FC = () => {
                   <>
                     {/* Project Icon */}
                     <div className="pointer-events-none">
-                      {icons[idx % icons.length]}
+                      <ItemIcon name={itemNames[idx % itemNames.length]} className="w-6 h-6" />
                     </div>
                     {/* Rarity Corner Pip */}
                     <div

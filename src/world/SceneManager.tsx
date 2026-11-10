@@ -142,6 +142,14 @@ export const SceneManager: React.FC = () => {
     };
   }, [nextScene, prevScene, setScene, toggleFrontCamera, toggleMute]);
 
+  // Immediate camera positioning on scene switch
+  useEffect(() => {
+    const preset = CAMERA_PRESETS[currentScene] || CAMERA_PRESETS[0];
+    camera.position.set(...preset.pos);
+    currentTarget.current.set(...preset.target);
+    camera.lookAt(currentTarget.current);
+  }, [currentScene, camera]);
+
   // Smooth Camera transition and mouse parallax
   useFrame((state, delta) => {
     const preset = CAMERA_PRESETS[currentScene] || CAMERA_PRESETS[0];
@@ -156,13 +164,14 @@ export const SceneManager: React.FC = () => {
       desiredTarget.set(0, 1.1, 0);
     } else {
       // Subtle cursor parallax
-      desiredPos.x += mouse.x * 0.35;
-      desiredPos.y += mouse.y * 0.25;
+      const t = state.clock.getElapsedTime();
+      desiredPos.x += mouse.x * 0.35 + Math.sin(t * 0.7) * 0.02;
+      desiredPos.y += mouse.y * 0.25 + Math.cos(t * 0.9) * 0.02;
     }
 
     // Smooth lerp camera position
-    camera.position.lerp(desiredPos, 4 * delta);
-    currentTarget.current.lerp(desiredTarget, 4 * delta);
+    camera.position.lerp(desiredPos, 6 * delta);
+    currentTarget.current.lerp(desiredTarget, 6 * delta);
     camera.lookAt(currentTarget.current);
   });
 

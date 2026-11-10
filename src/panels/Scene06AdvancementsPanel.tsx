@@ -2,6 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { content } from '../content';
 import { useStore } from '../store';
 import { sounds } from '../audio/soundManager';
+import { ItemIcon } from '../hud/PixelIcons';
+
+const ADV_ICON_MAP: Record<string, string> = {
+  chest: 'chest',
+  globe: 'compass',
+  fire: 'campfire',
+  pickaxe: 'diamond_pickaxe',
+  trophy: 'nether_star',
+  lock: 'barrier',
+};
 
 export const Scene06AdvancementsPanel: React.FC = () => {
   const setScene = useStore((s) => s.setScene);
@@ -20,8 +30,8 @@ export const Scene06AdvancementsPanel: React.FC = () => {
       {/* Pop-up Minecraft Advancement Toast */}
       {showToast && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-3 bg-[#242428] border-2 border-[#FFAA00] p-3 shadow-2xl animate-in slide-in-from-top-4 duration-300 pointer-events-none">
-          <div className="w-8 h-8 bg-black/60 border border-[#FFAA00] flex items-center justify-center font-pixel text-xs text-[#FFAA00]">
-            ★
+          <div className="w-9 h-9 bg-black/60 border border-[#FFAA00] flex items-center justify-center p-1">
+            <ItemIcon name="nether_star" className="w-7 h-7" alt="Advancement" />
           </div>
           <div>
             <div className="font-pixel text-[9px] text-[#FFAA00] uppercase tracking-wider">
@@ -34,7 +44,7 @@ export const Scene06AdvancementsPanel: React.FC = () => {
         </div>
       )}
 
-      {/* Main Panel on the Right Side (per Reference) */}
+      {/* Main Panel on the Right Side */}
       <div className="absolute top-[16%] right-[6%] z-30 w-[380px] sm:w-[440px] mc-panel p-5 select-none pointer-events-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
@@ -49,6 +59,8 @@ export const Scene06AdvancementsPanel: React.FC = () => {
         {/* Advancements List */}
         <div className="mt-4 space-y-3">
           {content.advancements.map((adv) => {
+            const iconName = ADV_ICON_MAP[adv.icon] || adv.icon;
+
             return (
               <div
                 key={adv.id}
@@ -60,13 +72,17 @@ export const Scene06AdvancementsPanel: React.FC = () => {
               >
                 {/* Gold Framed Icon Box */}
                 <div
-                  className={`w-9 h-9 flex items-center justify-center border-2 font-pixel text-xs shrink-0 ${
+                  className={`w-9 h-9 flex items-center justify-center border-2 shrink-0 p-1 ${
                     adv.completed
-                      ? 'border-[#FFAA00] bg-black/60 text-[#FFAA00]'
-                      : 'border-gray-600 bg-black/40 text-gray-500'
+                      ? 'border-[#FFAA00] bg-black/60'
+                      : 'border-gray-600 bg-black/40'
                   }`}
                 >
-                  {adv.completed ? '✔' : '🔒'}
+                  <ItemIcon
+                    name={adv.completed ? iconName : 'barrier'}
+                    className="w-6 h-6"
+                    alt={adv.title}
+                  />
                 </div>
 
                 {/* Text Content */}
@@ -99,10 +115,10 @@ export const Scene06AdvancementsPanel: React.FC = () => {
             }}
             className="px-4 py-2 mc-button font-pixel text-xs tracking-wider"
           >
-            Send a Message →
+            Connect With Me →
           </button>
           <span className="font-pixel text-[9px] text-gray-400">
-            Ancient City Y=-52
+            Ancient City Depth
           </span>
         </div>
       </div>

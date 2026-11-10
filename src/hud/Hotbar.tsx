@@ -4,11 +4,11 @@ import {
   GrassBlockIcon,
   EnchantedBookIcon,
   ChestIcon,
-  CompassIcon,
+  CraftingTableIcon,
   NetherStarIcon,
   EmeraldIcon,
   BookAndQuillIcon,
-  EnderPearlIcon
+  EnderEyeIcon
 } from './PixelIcons';
 import { sounds } from '../audio/soundManager';
 import { loadAndProcessSkin } from '../player/SkinTexture';
@@ -84,11 +84,11 @@ export const Hotbar: React.FC = () => {
                 )}
                 {idx === 2 && <EnchantedBookIcon className="w-6 h-6" />}
                 {idx === 3 && <ChestIcon className="w-6 h-6" />}
-                {idx === 4 && <CompassIcon className="w-6 h-6" />}
+                {idx === 4 && <CraftingTableIcon className="w-6 h-6" />}
                 {idx === 5 && <NetherStarIcon className="w-6 h-6" />}
                 {idx === 6 && <EmeraldIcon className="w-6 h-6" />}
                 {idx === 7 && <BookAndQuillIcon className="w-6 h-6" />}
-                {idx === 8 && <EnderPearlIcon className="w-6 h-6" />}
+                {idx === 8 && <EnderEyeIcon className="w-6 h-6" />}
               </div>
 
               {/* Tooltip on hover */}

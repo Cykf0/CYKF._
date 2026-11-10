@@ -2,6 +2,7 @@ import React, { Suspense, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useStore, BIOMES } from './store';
 import { SceneManager } from './world/SceneManager';
+import { PostProcessingPipeline } from './world/postprocessing/PostProcessingPipeline';
 import { sounds } from './audio/soundManager';
 import { content } from './content';
 
@@ -128,15 +129,17 @@ export const App: React.FC = () => {
           shadows={quality !== 'low'}
           gl={{
             preserveDrawingBuffer: true,
-            antialias: quality === 'high',
-            powerPreference: 'high-performance'
+            antialias: false,
+            powerPreference: 'high-performance',
           }}
+          dpr={quality === 'high' ? Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 2, 2) : quality === 'med' ? 1.5 : 1}
           camera={{ position: [0, 2.2, 5.8], fov: 45 }}
           className="w-full h-full"
         >
           <color attach="background" args={[BIOMES[currentScene]?.skyColor || '#140A22']} />
           <Suspense fallback={null}>
             <SceneManager />
+            <PostProcessingPipeline />
           </Suspense>
         </Canvas>
       </div>

@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
 import { content } from '../content';
 import { sounds } from '../audio/soundManager';
+import { ItemIcon } from '../hud/PixelIcons';
+
+const INGREDIENT_MAP: Record<string, string> = {
+  code: 'oak_planks',
+  layers: 'iron_ingot',
+  cloud: 'diamond',
+  database: 'redstone',
+  ruler: 'stick',
+  spark: 'blaze_powder',
+  books: 'book',
+  globe: 'compass',
+  atom: 'nether_star',
+};
 
 export const Scene05CraftingPanel: React.FC = () => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -36,24 +49,28 @@ export const Scene05CraftingPanel: React.FC = () => {
                   : 'bg-black/30 border border-white/5'
               }`}
             >
-              {/* 3 Input Slots */}
+              {/* 3 Input Slots with Real Minecraft Ingredients */}
               <div className="flex items-center gap-1">
-                {item.ingredients.map((ing, i) => (
-                  <div
-                    key={i}
-                    className={`w-7 h-7 flex items-center justify-center border text-[9px] font-pixel ${
-                      isHovered
-                        ? 'bg-[#3b3b44] border-mc-snowy text-white'
-                        : 'bg-[#222226] border-white/15 text-gray-400'
-                    }`}
-                  >
-                    {ing[0].toUpperCase()}
-                  </div>
-                ))}
+                {item.ingredients.map((ing, i) => {
+                  const itemName = INGREDIENT_MAP[ing.toLowerCase()] || ing;
+                  return (
+                    <div
+                      key={i}
+                      className={`w-8 h-8 flex items-center justify-center border p-0.5 ${
+                        isHovered
+                          ? 'bg-[#3b3b44] border-mc-snowy'
+                          : 'bg-[#222226] border-white/15'
+                      }`}
+                      title={ing}
+                    >
+                      <ItemIcon name={itemName} className="w-6 h-6" alt={ing} />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Crafting Arrow */}
-              <div className="pt-1.5 font-pixel text-xs text-gray-400">
+              <div className="pt-2 font-pixel text-xs text-gray-400">
                 →
               </div>
 

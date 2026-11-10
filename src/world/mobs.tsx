@@ -6,9 +6,14 @@ import { sounds } from '../audio/soundManager';
 /**
  * 3D Low-Poly Minecraft Sheep
  */
-export const Sheep: React.FC<{ position?: [number, number, number]; rotation?: [number, number, number] }> = ({
+export const Sheep: React.FC<{
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  woolColor?: string;
+}> = ({
   position = [0, 0, 0],
-  rotation = [0, 0, 0]
+  rotation = [0, 0, 0],
+  woolColor = '#EAEAEA',
 }) => {
   const headRef = useRef<THREE.Group>(null);
 
@@ -25,7 +30,7 @@ export const Sheep: React.FC<{ position?: [number, number, number]; rotation?: [
       {/* Wool Body */}
       <mesh position={[0, 1.2, 0]} castShadow>
         <boxGeometry args={[1.8, 1.4, 2.2]} />
-        <meshStandardMaterial color="#EAEAEA" roughness={0.9} />
+        <meshStandardMaterial color={woolColor} roughness={0.9} />
       </mesh>
 
       {/* Head */}
@@ -33,7 +38,7 @@ export const Sheep: React.FC<{ position?: [number, number, number]; rotation?: [
         {/* Head wool back */}
         <mesh position={[0, 0.2, 0]}>
           <boxGeometry args={[1.0, 1.0, 1.0]} />
-          <meshStandardMaterial color="#EAEAEA" roughness={0.9} />
+          <meshStandardMaterial color={woolColor} roughness={0.9} />
         </mesh>
         {/* Pink/Tan Face */}
         <mesh position={[0, 0, 0.35]}>

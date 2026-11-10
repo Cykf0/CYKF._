@@ -1,66 +1,157 @@
-import React from 'react';
+import React, { useRef, useMemo } from 'react';
+import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 import { PlayerModel } from '../player/PlayerModel';
-import { blockTextures } from '../world/blockTextures';
+import { blockMaterials } from '../world/blockMaterials';
+import {
+  FlickeringLight,
+  CharacterContactShadow,
+  DustMotes,
+} from '../world/EnvironmentEffects';
 
 export const Scene06Advancements: React.FC = () => {
+  const soulRef = useRef<THREE.Points>(null);
+
+  // 70 Rising Sculk Soul Particles
+  const { positions, speeds } = useMemo(() => {
+    const count = 70;
+    const pos = new Float32Array(count * 3);
+    const spd = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3]     = (Math.random() - 0.5) * 14;
+      pos[i * 3 + 1] = Math.random() * 6;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 14;
+      spd[i]         = 0.015 + Math.random() * 0.02;
+    }
+    return { positions: pos, speeds: spd };
+  }, []);
+
+  useFrame((state) => {
+    if (soulRef.current) {
+      const t = state.clock.getElapsedTime();
+      const pos = soulRef.current.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < 70; i++) {
+        pos[i * 3 + 1] += speeds[i];
+        pos[i * 3]     += Math.sin(t * 1.5 + i) * 0.005;
+        pos[i * 3 + 2] += Math.cos(t * 1.5 + i) * 0.005;
+
+        if (pos[i * 3 + 1] > 6.5) {
+          pos[i * 3 + 1] = 0.1;
+          pos[i * 3]     = (Math.random() - 0.5) * 14;
+          pos[i * 3 + 2] = (Math.random() - 0.5) * 14;
+        }
+      }
+      soulRef.current.geometry.attributes.position.needsUpdate = true;
+    }
+  });
+
   return (
     <group>
-      {/* Deep Dark Void Background */}
-      <color attach="background" args={['#040A10']} />
+      {/* 1. Oppressive Pitch-Black Cavern Lighting */}
+      <ambientLight intensity={0.15} color="#040D14" />
 
-      {/* Dark Ambient Cave Lighting */}
-      <ambientLight intensity={0.25} color="#04121A" />
-      <directionalLight position={[0, 5, 2]} intensity={0.4} color="#005B66" />
+      {/* Deep Cold Blue Directional Light */}
+      <directionalLight position={[0, 6, 4]} intensity={0.5} color="#0E364A" />
 
-      {/* Deep Dark Sculk Fog */}
-      <fog attach="fog" args={['#04090E', 3, 16]} />
+      {/* Cold Cyan Rim Light for Player & Sculk Pillars */}
+      <directionalLight position={[-3, 4, -4]} intensity={1.6} color="#00E5FF" />
 
-      {/* Deepslate Floor */}
+      {/* Heavy Pitch-Black Fog */}
+      <fog attach="fog" args={['#02060A', 4, 18]} />
+
+      {/* 2. Floating Cyan Soul Particles */}
+      <points ref={soulRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[positions, 3]}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={0.1}
+          color="#00F3FF"
+          transparent
+          opacity={0.85}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+
+      {/* Ambient Spore Motes */}
+      <DustMotes count={45} area={[12, 5, 12]} color="#00B4D8" size={0.05} />
+
+      {/* 3. Ancient City Sculk Floor with Glowing Cyan Tendrils */}
       <mesh position={[0, -0.5, 0]} receiveShadow>
-        <boxGeometry args={[18, 1, 18]} />
-        <meshStandardMaterial map={blockTextures.sculk} roughness={0.9} />
+        <boxGeometry args={[20, 1, 20]} />
+        <primitive object={blockMaterials.sculk} attach="material" />
       </mesh>
 
-      {/* Ancient City Deepslate Ruins & Pillars */}
-      {[-4, -1, 3].map((px, i) => (
-        <group key={i} position={[px, 0, -3]}>
-          <mesh position={[0, 2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[1.6, 4, 1.6]} />
-            <meshStandardMaterial map={blockTextures.sculk} roughness={0.9} />
+      {/* 4. Deepslate Sculk Catalyst Pillars */}
+      {[-3.6, 3.6].map((cx, i) => (
+        <group key={i} position={[cx, 0, -2]}>
+          <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.2, 3.6, 1.2]} />
+            <primitive object={blockMaterials.sculk} attach="material" />
           </mesh>
-          {/* Glowing Sculk Sensor / Vein on top */}
-          <mesh position={[0, 4.1, 0]}>
-            <boxGeometry args={[1.2, 0.2, 1.2]} />
-            <meshBasicMaterial color="#00E5FF" />
+          {/* Glowing Catalyst Heart */}
+          <mesh position={[0, 3.9, 0]} castShadow>
+            <boxGeometry args={[0.9, 0.6, 0.9]} />
+            <meshStandardMaterial
+              color="#00E5FF"
+              emissive="#00E5FF"
+              emissiveIntensity={3.5}
+              roughness={0.2}
+            />
           </mesh>
-          <pointLight color="#00E5FF" intensity={1.8} distance={6} position={[0, 4.5, 0]} />
+          <pointLight color="#00E5FF" intensity={2.8} distance={8} decay={2} />
+          <CharacterContactShadow position={[0, 0.01, 0]} opacity={0.7} scale={1.8} />
         </group>
       ))}
 
-      {/* Hanging Soul Lanterns */}
-      {[-2.5, 1.5].map((sx, i) => (
-        <group key={i} position={[sx, 3.5, 0]}>
-          <mesh position={[0, 0.6, 0]}>
-            <cylinderGeometry args={[0.03, 0.03, 1.2, 6]} />
-            <meshStandardMaterial color="#222226" metalness={0.9} />
-          </mesh>
-          {/* Soul Lantern Cube */}
-          <mesh>
-            <boxGeometry args={[0.6, 0.8, 0.6]} />
-            <meshBasicMaterial color="#00E5FF" />
-          </mesh>
-          <pointLight color="#00E5FF" intensity={2.5} distance={8} decay={2} />
-        </group>
-      ))}
-
-      {/* Player on Ledge holding soul lantern */}
-      <group position={[-1.6, 0, 0.5]} rotation={[0, 0.35, 0]}>
-        <PlayerModel
-          pose="idle"
-          heldItem="soul-lantern"
-          scale={0.065}
+      {/* 5. Center Hanging Soul Lantern */}
+      <group position={[0, 4.2, 0]}>
+        {/* Iron Chain */}
+        <mesh position={[0, 0.7, 0]}>
+          <cylinderGeometry args={[0.04, 0.04, 1.4, 6]} />
+          <meshStandardMaterial color="#222222" metalness={0.9} />
+        </mesh>
+        {/* Lantern Casing */}
+        <mesh castShadow>
+          <boxGeometry args={[0.5, 0.7, 0.5]} />
+          <meshStandardMaterial color="#1A2830" roughness={0.7} />
+        </mesh>
+        {/* Glowing Soul Core */}
+        <mesh>
+          <boxGeometry args={[0.3, 0.45, 0.3]} />
+          <meshStandardMaterial
+            color="#00F0FF"
+            emissive="#00F0FF"
+            emissiveIntensity={3.5}
+            roughness={0.1}
+          />
+        </mesh>
+        {/* Dynamic Flickering Soul Light */}
+        <FlickeringLight
+          position={[0, 0, 0]}
+          color="#00E5FF"
+          baseIntensity={3.2}
+          distance={10}
+          flickerSpeed={8}
         />
       </group>
+
+      {/* 6. Saksham Player Standing in the Deep Dark holding Soul Lantern */}
+      <React.Suspense fallback={null}>
+        <group position={[1.8, 0, 0.4]} rotation={[0, -0.35, 0]}>
+          <PlayerModel
+            pose="idle"
+            heldItem="soul-lantern"
+            scale={0.065}
+          />
+          <CharacterContactShadow position={[0, 0.01, 0]} opacity={0.8} scale={1.8} />
+          <pointLight position={[0.4, 1.1, 0.4]} color="#00E5FF" intensity={2.4} distance={6} />
+        </group>
+      </React.Suspense>
     </group>
   );
 };
