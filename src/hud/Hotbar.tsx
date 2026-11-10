@@ -37,10 +37,10 @@ export const Hotbar: React.FC = () => {
     '3: Enchanted Book [Sharpness V]',
     '4: Treasure Chest [Project Vault]',
     '5: Crafting Table [Recipe Grid]',
-    '6: Nether Star / Advancements',
+    '6: Soul Torch / Advancements',
     '7: Emerald [Villager Trading]',
     '8: Book & Quill [Let\'s Connect]',
-    '9: Eye of Ender [The End Portal]'
+    '9: Soul Torch / The End Portal'
   ];
 
   return (
@@ -54,7 +54,10 @@ export const Hotbar: React.FC = () => {
             <button
               key={biome.id}
               onClick={() => handleSelect(idx)}
-              onMouseEnter={() => setHoveredSlot(idx)}
+              onMouseEnter={() => {
+                sounds.playHover();
+                setHoveredSlot(idx);
+              }}
               onMouseLeave={() => setHoveredSlot(null)}
               className={`relative mc-hotbar-slot flex items-center justify-center cursor-pointer transition-none ${
                 isSelected ? 'z-20' : 'hover:brightness-110'

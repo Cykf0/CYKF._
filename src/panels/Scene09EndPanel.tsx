@@ -6,6 +6,7 @@ import confetti from 'canvas-confetti';
 
 export const Scene09EndPanel: React.FC = () => {
   const respawnToStart = useStore((s) => s.respawnToStart);
+  const [isOpen, setIsOpen] = React.useState(true);
 
   const handleRespawn = () => {
     sounds.playPortalWarp();
@@ -20,8 +21,36 @@ export const Scene09EndPanel: React.FC = () => {
     });
   };
 
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => {
+          sounds.playClick();
+          setIsOpen(true);
+        }}
+        className="absolute top-[18%] left-1/2 -translate-x-1/2 z-30 mc-button px-4 py-1.5 font-pixel text-xs text-white/90 hover:text-white flex items-center gap-2 pointer-events-auto shadow-lg"
+        title="Open Victory Plaque"
+      >
+        <span>📜 The End</span>
+        <span className="text-[10px] text-[#FFAA00]">▶</span>
+      </button>
+    );
+  }
+
   return (
-    <div className="absolute top-[22%] left-1/2 -translate-x-1/2 z-30 max-w-lg text-center select-none pointer-events-auto flex flex-col items-center">
+    <div className="absolute top-[20%] left-1/2 -translate-x-1/2 z-30 max-w-lg text-center select-none pointer-events-auto flex flex-col items-center relative">
+      {/* Small Corner Close Button */}
+      <button
+        onClick={() => {
+          sounds.playClick();
+          setIsOpen(false);
+        }}
+        className="absolute -top-3 -right-6 w-5 h-5 mc-button font-pixel text-[10px] text-gray-300 hover:text-white flex items-center justify-center shrink-0 cursor-pointer"
+        title="Close"
+      >
+        ✕
+      </button>
+
       {/* Small Caps Header */}
       <div className="font-pixel text-[11px] text-[#D8B4FE] tracking-[0.3em] uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
         {content.endPoem.title}

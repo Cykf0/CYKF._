@@ -36,12 +36,32 @@
   }
 }
 
-/* Minecraft UI Bevels */
+/* Minecraft Scrollbar */
+.mc-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+.mc-scrollbar::-webkit-scrollbar-track {
+  background: #141318;
+  border-left: 1px solid #333;
+}
+.mc-scrollbar::-webkit-scrollbar-thumb {
+  background: #555;
+  border-top: 1px solid #777;
+  border-left: 1px solid #777;
+  border-bottom: 1px solid #222;
+  border-right: 1px solid #222;
+}
+.mc-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Minecraft UI Bevels - Crystal-clear transparent glass */
 .mc-panel {
-  background: rgba(18, 18, 22, 0.78);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.08), inset -1px -1px 0 rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.5);
+  background: rgba(8, 10, 14, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.08), inset -1px -1px 0 rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.25);
   clip-path: polygon(
     0 4px, 4px 4px, 4px 0,
     calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,

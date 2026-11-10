@@ -3,7 +3,7 @@
 **Project**: "Cykf._" Interactive 3D Minecraft Portfolio  
 **Engineer**: Saksham (`Cykf_`)  
 **Audit Protocol**: Dense 60x34 Raycast Grid (2,040 rays/scene) + DOM Hierarchy Scan + 50 Scene Switch Memory Leak Test  
-**Date**: 2026-11-10T16:55:04.627Z  
+**Date**: 2026-11-10T17:34:52.062Z  
 
 ---
 
@@ -29,15 +29,15 @@ Target: **0 Failures across all 9 scenes.**
 
 | Scene | Total Rays | Hits | Registered | Fallback | Failures | Coverage | Category Breakdown |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Scene 01: Village Sunrise** | 2040 | 1457 | 1457 | 0 | **0** | **100.0%** | BLOCK:73, LIGHT_SOURCE:1372, PLAYER:12 |
-| **Scene 02: Cherry Grove** | 2040 | 2040 | 2040 | 0 | **0** | **100.0%** | LIGHT_SOURCE:936, PARTICLE:1104 |
-| **Scene 03: Stronghold** | 2040 | 1744 | 1744 | 0 | **0** | **100.0%** | BLOCK:97, PROP:1110, STRUCTURE:537 |
-| **Scene 04: Mineshaft** | 2040 | 1690 | 1690 | 0 | **0** | **100.0%** | BLOCK:262, STRUCTURE:1428 |
-| **Scene 05: Snowy Peaks** | 2040 | 1901 | 1901 | 0 | **0** | **100.0%** | BLOCK:498, PLANT:317, LIGHT_SOURCE:774, STRUCTURE:191, PLAYER:121 |
-| **Scene 06: Deep Dark** | 2040 | 1063 | 1063 | 0 | **0** | **100.0%** | BLOCK:349, STRUCTURE:598, PLAYER:116 |
-| **Scene 07: Village Interior** | 2040 | 1558 | 1558 | 0 | **0** | **100.0%** | BLOCK:257, PROP:1145, PLAYER:156 |
-| **Scene 08: Lush Caves** | 2040 | 1927 | 1927 | 0 | **0** | **100.0%** | BLOCK:100, PLANT:114, LIGHT_SOURCE:2, LIQUID:1632, PLAYER:79 |
-| **Scene 09: The End** | 2040 | 1737 | 1737 | 0 | **0** | **100.0%** | BLOCK:1094, MOB:212, STRUCTURE:214, PLAYER:217 |
+| **Scene 01: Village Sunrise** | 2040 | 1603 | 1603 | 0 | **0** | **100.0%** | BLOCK:1413, STRUCTURE:167, SKY:23 |
+| **Scene 02: Cherry Grove** | 2040 | 1181 | 1181 | 0 | **0** | **100.0%** | BLOCK:928, PLANT:14, MOB:45, LIGHT_SOURCE:65, PLAYER:129 |
+| **Scene 03: Stronghold** | 2040 | 1738 | 1738 | 0 | **0** | **100.0%** | BLOCK:78, PROP:1109, STRUCTURE:551 |
+| **Scene 04: Mineshaft** | 2040 | 1818 | 1818 | 0 | **0** | **100.0%** | BLOCK:1472, STRUCTURE:346 |
+| **Scene 05: Snowy Peaks** | 2040 | 1725 | 1725 | 0 | **0** | **100.0%** | BLOCK:705, PLANT:64, LIGHT_SOURCE:732, STRUCTURE:92, PLAYER:132 |
+| **Scene 06: Deep Dark** | 2040 | 1113 | 1113 | 0 | **0** | **100.0%** | BLOCK:223, STRUCTURE:748, PLAYER:142 |
+| **Scene 07: Village Interior** | 2040 | 1409 | 1409 | 0 | **0** | **100.0%** | BLOCK:275, PROP:950, PLAYER:184 |
+| **Scene 08: Lush Caves** | 2040 | 1895 | 1895 | 0 | **0** | **100.0%** | BLOCK:122, PLANT:136, LIGHT_SOURCE:1, LIQUID:1496, PARTICLE:1, PLAYER:139 |
+| **Scene 09: The End** | 2040 | 1787 | 1787 | 0 | **0** | **100.0%** | BLOCK:809, MOB:142, PROP:411, STRUCTURE:213, PLAYER:212 |
 
 ---
 
@@ -118,11 +118,11 @@ Every HUD and panel piece verified with hover and click behaviors:
 
 ### A. 50 Rapid Scene Switches Memory Leak Test
 - **Total Switches Executed**: 50 transitions across all 9 biomes
-- **Initial Geometries**: 150
-- **Final Geometries**: 150
+- **Initial Geometries**: 395
+- **Final Geometries**: 395
 - **Geometry Leak Delta**: **0** (Zero resource accumulation)
-- **Initial Textures**: 104
-- **Final Textures**: 104
+- **Initial Textures**: 56
+- **Final Textures**: 56
 - **Texture Leak Delta**: **0** (Properly disposed on unmount)
 - **Heap Memory Delta**: 0.00 MB (Stable garbage collection)
 - **Status**: **PASS (0 Leaks)**

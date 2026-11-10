@@ -174,9 +174,13 @@ class InteractionRegistry {
         }
         if (!base.onClick) {
           base.onClick = () => {
-            if (base.name.toLowerCase().includes('sheep')) sounds.playSheepBaa();
-            else if (base.name.toLowerCase().includes('enderman')) sounds.playEndermanVwoop();
-            else if (base.name.toLowerCase().includes('villager')) sounds.playVillagerHmm();
+            const lower = base.name.toLowerCase();
+            if (lower.includes('sheep')) sounds.playSheepBaa();
+            else if (lower.includes('enderman')) sounds.playEndermanVwoop();
+            else if (lower.includes('villager')) sounds.playVillagerHmm();
+            else if (lower.includes('cow')) sounds.playCow();
+            else if (lower.includes('zombie')) sounds.playZombie();
+            else if (lower.includes('creeper')) sounds.playCreeperFuse();
             else sounds.playClick();
 
             useStore.getState().recordDiscovery(base.id, 'MOB', base.name);
@@ -192,8 +196,17 @@ class InteractionRegistry {
         }
         if (!base.onClick) {
           base.onClick = () => {
-            if (base.name.toLowerCase().includes('chest')) sounds.playChestOpen();
-            else if (base.name.toLowerCase().includes('bell')) sounds.playBellRing();
+            const lower = base.name.toLowerCase();
+            if (lower.includes('chest')) sounds.playChestOpen();
+            else if (lower.includes('bell')) sounds.playBellRing();
+            else if (lower.includes('anvil')) sounds.playAnvilUse();
+            else if (lower.includes('door')) sounds.playDoorOpen();
+            else if (lower.includes('crafting')) sounds.playCraft();
+            else if (lower.includes('furnace')) sounds.playFire();
+            else if (lower.includes('enchant')) sounds.playEnchantChime();
+            else if (lower.includes('minecart') || lower.includes('rail')) sounds.playMinecart();
+            else if (lower.includes('button') || lower.includes('lever') || lower.includes('switch') || lower.includes('plate')) sounds.playButton();
+            else if (lower.includes('portal') || lower.includes('crystal')) sounds.playPortalWarp();
             else sounds.playClick();
 
             useStore.getState().recordDiscovery(base.id, 'PROP', base.name);
@@ -209,7 +222,12 @@ class InteractionRegistry {
         }
         if (!base.onClick) {
           base.onClick = () => {
-            sounds.playClick();
+            const lower = base.name.toLowerCase();
+            if (lower.includes('fire') || lower.includes('torch') || lower.includes('candle') || lower.includes('lantern')) {
+              sounds.playFire();
+            } else {
+              sounds.playClick();
+            }
             useStore.getState().recordDiscovery(base.id, 'LIGHT_SOURCE', base.name);
           };
         }
@@ -223,7 +241,7 @@ class InteractionRegistry {
         }
         if (!base.onClick) {
           base.onClick = () => {
-            sounds.playItemPop();
+            sounds.playItemPickup();
             useStore.getState().recordDiscovery(base.id, 'ITEM', base.name);
           };
         }
@@ -237,7 +255,8 @@ class InteractionRegistry {
         }
         if (!base.onClick) {
           base.onClick = () => {
-            sounds.playWaterSplash();
+            if (base.name.toLowerCase().includes('lava')) sounds.playLava();
+            else sounds.playWaterSplash();
             useStore.getState().recordDiscovery(base.id, 'LIQUID', base.name);
           };
         }

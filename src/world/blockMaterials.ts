@@ -22,9 +22,55 @@ export interface MaterialOptions {
   opacity?: number;
 }
 
+const FILE_MAP: Record<string, string> = {
+  grassTop: 'grass_block_top',
+  grassSide: 'grass_block_side',
+  dirt: 'dirt',
+  oakPlanks: 'oak_planks',
+  stone: 'stone',
+  cobblestone: 'cobblestone',
+  stoneBricks: 'stone_bricks',
+  mossyStoneBricks: 'mossy_stone_bricks',
+  crackedStoneBricks: 'cracked_stone_bricks',
+  chiseledStoneBricks: 'chiseled_stone_bricks',
+  oakLog: 'oak_log',
+  oakLogTop: 'oak_log_top',
+  oakLeaves: 'oak_leaves',
+  cherryPlanks: 'cherry_planks',
+  cherryLog: 'cherry_log',
+  cherryLogTop: 'cherry_log_top',
+  cherryLeaves: 'cherry_leaves',
+  obsidian: 'obsidian',
+  endStone: 'end_stone',
+  sculk: 'sculk',
+  deepslateBricks: 'deepslate_bricks',
+  diamondOre: 'diamond_ore',
+  goldOre: 'gold_ore',
+  ironOre: 'iron_ore',
+  redstoneOre: 'redstone_ore',
+  emeraldOre: 'emerald_ore',
+  coalOre: 'coal_ore',
+  snow: 'snow',
+  ice: 'ice',
+  clay: 'clay',
+  gravel: 'gravel',
+  sand: 'sand',
+  moss: 'moss_block',
+  dripstone: 'dripstone_block',
+  glowstone: 'glowstone',
+  bookshelf: 'bookshelf',
+  craftingTableTop: 'crafting_table_top',
+  craftingTableSide: 'crafting_table_side',
+  craftingTableFront: 'crafting_table_front',
+  furnaceFront: 'furnace_front',
+  furnaceSide: 'furnace_side',
+  furnaceTop: 'furnace_top',
+  torch: 'torch',
+};
+
 class VanillaMaterialRegistry {
   private canvasCache = new Map<string, HTMLCanvasElement>();
-  private textureCache = new Map<string, THREE.CanvasTexture>();
+  private textureCache = new Map<string, THREE.Texture>();
   private materialCache = new Map<string, THREE.MeshStandardMaterial>();
 
   // 1. Create crisp 16x16 Canvas
@@ -42,19 +88,39 @@ class VanillaMaterialRegistry {
     return canvas;
   }
 
-  // 2. Create crisp NearestFilter CanvasTexture
-  private createTexture(name: string, drawFn: (ctx: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
+  // 2. Create crisp NearestFilter Texture from official PNG or procedural fallback
+  private createTexture(name: string, drawFn: (ctx: CanvasRenderingContext2D) => void): THREE.Texture {
     if (this.textureCache.has(name)) return this.textureCache.get(name)!;
 
-    const canvas = this.createCanvas(name, drawFn);
-    const texture = new THREE.CanvasTexture(canvas);
+    const pngBase = FILE_MAP[name] || name.replace(/([A-Z])/g, '_$1').toLowerCase();
+    const loader = new THREE.TextureLoader();
+
+    const texture = loader.load(
+      `/texturepack/assets/minecraft/textures/block/${pngBase}.png`,
+      (tex) => {
+        tex.magFilter = THREE.NearestFilter;
+        tex.minFilter = THREE.NearestFilter;
+        tex.generateMipmaps = false;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.RepeatWrapping;
+        tex.wrapT = THREE.RepeatWrapping;
+        tex.needsUpdate = true;
+      },
+      undefined,
+      () => {
+        // Fallback to canvas draw if file is missing
+        const canvas = this.createCanvas(name, drawFn);
+        texture.image = canvas;
+        texture.needsUpdate = true;
+      }
+    );
+
     texture.magFilter = THREE.NearestFilter;
     texture.minFilter = THREE.NearestFilter;
     texture.generateMipmaps = false;
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.wrapS = THREE.ClampToEdgeWrapping;
-    texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.needsUpdate = true;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
 
     this.textureCache.set(name, texture);
     return texture;

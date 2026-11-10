@@ -19,24 +19,36 @@ import { BackgroundHorizon } from './BackgroundHorizon';
 
 // Per-scene camera configurations
 const CAMERA_PRESETS: { pos: [number, number, number]; target: [number, number, number]; fov: number }[] = [
-  // Scene 1: Title (Village Sunrise)
-  { pos: [0, 2.2, 5.8], target: [0.8, 1.2, 0], fov: 45 },
-  // Scene 2: Profile (Cherry Grove)
-  { pos: [0, 1.8, 5.2], target: [0.8, 1.1, 0], fov: 44 },
-  // Scene 3: Enchantments (Stronghold)
-  { pos: [-0.4, 2.0, 5.0], target: [0.9, 1.2, 0], fov: 45 },
-  // Scene 4: Chest (Mineshaft)
-  { pos: [-0.3, 1.9, 5.4], target: [0.9, 1.0, 0], fov: 45 },
-  // Scene 5: Crafting (Snowy Peaks)
-  { pos: [-0.2, 2.4, 5.5], target: [0.8, 1.3, -3], fov: 46 },
-  // Scene 6: Advancements (Deep Dark)
-  { pos: [0, 2.2, 5.6], target: [-0.6, 1.2, -2], fov: 45 },
-  // Scene 7: Trades (Village Interior)
-  { pos: [-0.4, 1.8, 4.8], target: [0.6, 1.1, 0], fov: 44 },
-  // Scene 8: Connect (Lush Caves)
-  { pos: [-0.4, 1.9, 5.2], target: [0.8, 1.1, 0], fov: 45 },
-  // Scene 9: The End
-  { pos: [0, 2.4, 6.2], target: [0.6, 1.5, 0], fov: 46 },
+  // Scene 1: The Developer Archive
+  { pos: [1.6, 2.8, 6.8], target: [-0.4, 1.4, -0.5], fov: 46 },
+  // Scene 2: The Eternal Forest
+  { pos: [0.8, 2.8, 6.8], target: [0.2, 1.6, -0.5], fov: 48 },
+  // Scene 3: The Arcane Library
+  { pos: [-0.2, 2.2, 5.5], target: [0.5, 1.3, 0], fov: 45 },
+  // Scene 4: The Abandoned Mines
+  { pos: [-0.4, 2.2, 5.8], target: [0.4, 1.2, 0], fov: 46 },
+  // Scene 5: The Frozen Frontier
+  { pos: [0, 2.8, 6.8], target: [0.3, 1.4, -1.0], fov: 46 },
+  // Scene 6: The Deep Dark
+  { pos: [0, 2.4, 6.2], target: [0, 1.4, -1.5], fov: 45 },
+  // Scene 7: The Villager's Home
+  { pos: [-0.2, 2.2, 5.2], target: [0.3, 1.2, -0.5], fov: 45 },
+  // Scene 8: The Lost Paradise
+  { pos: [-0.2, 2.4, 5.8], target: [0.5, 1.3, -0.5], fov: 46 },
+  // Scene 9: The Endless Void
+  { pos: [0, 2.8, 6.8], target: [0.2, 1.5, 0], fov: 46 },
+];
+
+const BIOME_SURFACES: ('grass' | 'stone' | 'sand' | 'wood' | 'snow' | 'water')[] = [
+  'grass', // 1. The Developer Archive
+  'grass', // 2. Eternal Forest
+  'stone', // 3. Arcane Library
+  'stone', // 4. Abandoned Mines
+  'snow',  // 5. Frozen Frontier
+  'stone', // 6. Deep Dark
+  'wood',  // 7. Villager's Home
+  'stone', // 8. Lost Paradise
+  'stone', // 9. Endless Void
 ];
 
 export const SceneManager: React.FC = () => {
@@ -61,8 +73,11 @@ export const SceneManager: React.FC = () => {
     }
   }, [camera, scene, gl]);
 
-  // Sync with browser hash routing
+  // Sync with browser hash routing & trigger surface-aware biome audio
   useEffect(() => {
+    sounds.setBiome(currentScene);
+    sounds.playFootstep(BIOME_SURFACES[currentScene]);
+
     const handleHash = () => {
       const hash = window.location.hash;
       const found = BIOMES.findIndex((b) => b.hash === hash);
@@ -89,28 +104,30 @@ export const SceneManager: React.FC = () => {
       if (e.key >= '1' && e.key <= '9') {
         const idx = parseInt(e.key, 10) - 1;
         if (idx < BIOMES.length) {
-          sounds.playHotbarTick();
+          sounds.playSceneTransition();
           setScene(idx);
         }
       }
 
       // Arrows / A / D
       if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-        sounds.playHotbarTick();
+        sounds.playSceneTransition();
         nextScene();
       }
       if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-        sounds.playHotbarTick();
+        sounds.playSceneTransition();
         prevScene();
       }
 
       // 'F' key toggles front camera easter egg
       if (e.key.toLowerCase() === 'f') {
+        sounds.playClick();
         toggleFrontCamera();
       }
 
       // 'M' key toggles mute
       if (e.key.toLowerCase() === 'm') {
+        sounds.playClick();
         toggleMute();
       }
 
@@ -193,9 +210,15 @@ export const SceneManager: React.FC = () => {
       desiredPos.y += mouse.y * 0.25 + Math.cos(t * 0.9) * 0.02;
     }
 
-    // Smooth lerp camera position
-    camera.position.lerp(desiredPos, 6 * delta);
-    currentTarget.current.lerp(desiredTarget, 6 * delta);
+    // Smooth, stable damp camera position (immune to delta spikes or lag)
+    const clampedDelta = Math.min(delta, 0.05);
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, desiredPos.x, 8, clampedDelta);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, desiredPos.y, 8, clampedDelta);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, desiredPos.z, 8, clampedDelta);
+
+    currentTarget.current.x = THREE.MathUtils.damp(currentTarget.current.x, desiredTarget.x, 8, clampedDelta);
+    currentTarget.current.y = THREE.MathUtils.damp(currentTarget.current.y, desiredTarget.y, 8, clampedDelta);
+    currentTarget.current.z = THREE.MathUtils.damp(currentTarget.current.z, desiredTarget.z, 8, clampedDelta);
     camera.lookAt(currentTarget.current);
   });
 

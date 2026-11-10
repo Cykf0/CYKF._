@@ -96,7 +96,7 @@ export const VolumetricLightShaft: React.FC<{
       }}
     >
       <mesh ref={meshRef}>
-        <cylinderGeometry args={[0.5, 2.2, 10, 16, 1, true]} />
+        <boxGeometry args={[1.5, 10, 1.5]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -251,16 +251,16 @@ export const CharacterContactShadow: React.FC<{
   opacity?: number;
   scale?: number;
   blur?: number;
-}> = ({ position = [0, 0.01, 0], opacity = 0.65, scale = 2.0, blur = 1.5 }) => {
+}> = ({ position = [0, 0.01, 0], opacity = 0.55, scale = 1.0 }) => {
   return (
-    <ContactShadows
-      position={position}
-      opacity={opacity}
-      scale={scale}
-      blur={blur}
-      far={1.5}
-      resolution={256}
-      color="#050810"
-    />
+    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[scale * 0.9, scale * 0.9]} />
+      <meshBasicMaterial
+        color="#000000"
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+      />
+    </mesh>
   );
 };

@@ -17,17 +17,47 @@ const INGREDIENT_MAP: Record<string, string> = {
 
 export const Scene05CraftingPanel: React.FC = () => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
+
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => {
+          sounds.playClick();
+          setIsOpen(true);
+        }}
+        className="absolute top-[15%] left-[4%] z-30 mc-button px-3 py-1.5 font-pixel text-xs text-white/90 hover:text-white flex items-center gap-2 pointer-events-auto shadow-lg"
+        title="Open Crafting Panel"
+      >
+        <span>🛠 Crafting Recipes</span>
+        <span className="text-[10px] text-[#FFAA00]">▶</span>
+      </button>
+    );
+  }
 
   return (
-    <div className="absolute top-[15%] left-[6%] z-30 w-[420px] sm:w-[480px] mc-panel p-5 select-none pointer-events-auto">
+    <div className="absolute top-[15%] left-[4%] sm:left-[6%] z-30 w-[390px] sm:w-[460px] mc-panel p-4 sm:p-5 select-none pointer-events-auto">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-white/10">
         <h2 className="font-pixel text-sm text-white tracking-wider">
           Crafting - The Journey
         </h2>
-        <span className="font-pixel text-[9px] text-mc-snowy">
-          3 Recipes
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-pixel text-[9px] text-mc-snowy">
+            3 Recipes
+          </span>
+          {/* Small Corner Close Button */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setIsOpen(false);
+            }}
+            className="w-5 h-5 mc-button font-pixel text-[10px] text-gray-300 hover:text-white flex items-center justify-center shrink-0 cursor-pointer"
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* 3 Recipe Rows */}

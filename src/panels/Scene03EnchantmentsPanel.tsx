@@ -4,17 +4,47 @@ import { sounds } from '../audio/soundManager';
 
 export const Scene03EnchantmentsPanel: React.FC = () => {
   const [hoveredSkill, setHoveredSkill] = useState<SkillItem | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
+
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => {
+          sounds.playClick();
+          setIsOpen(true);
+        }}
+        className="absolute top-[14%] left-[4%] z-30 mc-button px-3 py-1.5 font-pixel text-xs text-white/90 hover:text-white flex items-center gap-2 pointer-events-auto shadow-lg"
+        title="Open Enchantments Panel"
+      >
+        <span>✨ Enchantments</span>
+        <span className="text-[10px] text-[#FFAA00]">▶</span>
+      </button>
+    );
+  }
 
   return (
-    <div className="absolute top-[14%] left-[6%] z-30 w-[380px] sm:w-[440px] mc-panel p-5 select-none pointer-events-auto">
+    <div className="absolute top-[14%] left-[4%] sm:left-[6%] z-30 w-[360px] sm:w-[420px] mc-panel p-4 sm:p-5 select-none pointer-events-auto">
       {/* Header */}
       <div className="flex items-center justify-between pb-3 border-b border-white/10">
         <h2 className="font-pixel text-sm text-white tracking-wider flex items-center gap-2">
           <span>Enchantments</span>
         </h2>
-        <span className="font-pixel text-[9px] text-mc-stronghold uppercase">
-          Table Tier 30
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-pixel text-[9px] text-mc-stronghold uppercase">
+            Table Tier 30
+          </span>
+          {/* Small Corner Close Button */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setIsOpen(false);
+            }}
+            className="w-5 h-5 mc-button font-pixel text-[10px] text-gray-300 hover:text-white flex items-center justify-center shrink-0 cursor-pointer"
+            title="Close"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* 7 Skill Rows */}

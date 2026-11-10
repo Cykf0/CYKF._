@@ -9,6 +9,7 @@ export const Scene04ChestPanel: React.FC = () => {
   const setScene = useStore((s) => s.setScene);
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(null);
   const [hoveredProject, setHoveredProject] = useState<ProjectItem | null>(null);
+  const [isOpen, setIsOpen] = useState(true);
 
   const itemNames = [
     'nether_star',
@@ -19,17 +20,46 @@ export const Scene04ChestPanel: React.FC = () => {
     'diamond'
   ];
 
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => {
+          sounds.playChestOpen();
+          setIsOpen(true);
+        }}
+        className="absolute top-[16%] left-[4%] z-30 mc-button px-3 py-1.5 font-pixel text-xs text-white/90 hover:text-white flex items-center gap-2 pointer-events-auto shadow-lg"
+        title="Open Chest Builds"
+      >
+        <span>📦 Completed Builds</span>
+        <span className="text-[10px] text-[#FFAA00]">▶</span>
+      </button>
+    );
+  }
+
   return (
     <>
-      <div className="absolute top-[16%] left-[6%] z-30 w-[380px] sm:w-[440px] mc-panel p-5 select-none pointer-events-auto">
+      <div className="absolute top-[16%] left-[4%] sm:left-[6%] z-30 w-[360px] sm:w-[420px] mc-panel p-4 sm:p-5 select-none pointer-events-auto">
         {/* Panel Header */}
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
           <h2 className="font-pixel text-sm text-white tracking-wider">
             Chest - Completed Builds
           </h2>
-          <span className="font-pixel text-[9px] text-[#FFAA00]">
-            6 / 12 Slots
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="font-pixel text-[9px] text-[#FFAA00]">
+              6 / 12 Slots
+            </span>
+            {/* Small Corner Close Button */}
+            <button
+              onClick={() => {
+                sounds.playChestClose();
+                setIsOpen(false);
+              }}
+              className="w-5 h-5 mc-button font-pixel text-[10px] text-gray-300 hover:text-white flex items-center justify-center shrink-0 cursor-pointer"
+              title="Close"
+            >
+              ✕
+            </button>
+          </div>
         </div>
 
         {/* 12-Slot Chest Grid (2 rows of 6) */}

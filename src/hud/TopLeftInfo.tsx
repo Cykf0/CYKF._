@@ -4,15 +4,15 @@ import { content } from '../content';
 import { sounds } from '../audio/soundManager';
 
 const BIOME_FACTS: string[] = [
-  'Village: Peaceful morning where iron golems protect crops and villagers trade emeralds.',
-  'Cherry Grove: Rare mountain biome with pink petals, gentle breezes, and playful sheep.',
-  'Stronghold: Deep underground fortress housing ancient libraries and end portals.',
-  'Mineshaft: Abandoned railway shafts rich in gold, diamonds, and glowing torches.',
-  'Snowy Peaks: Frigid summit with powder snow, spruce pines, and warming campfires.',
-  'Deep Dark: Ominous biome where the Warden listens to vibrations from sculk sensors.',
-  'Village Interior: Cozy timber haven with crackling hearth, lecterns, and trading posts.',
-  'Lush Caves: Underground paradise of glowing berries, spore blossoms, and axolotls.',
-  'The End: Cosmic dimension of obsidian pillars, end crystals, and floating chorus plants.',
+  'The Developer Archive: Where ideas, experiments, and codebases are forged into reality.',
+  'The Eternal Forest: Colossal fantasy canopies, ancient logs, and the archivist\'s woodland cabin.',
+  'The Arcane Library: Towering bookshelves, glowing glyphs, and legendary enchanting daises.',
+  'The Abandoned Mines: Rich ore strata, molten lava pools, and forgotten miner supply caches.',
+  'The Frozen Frontier: Frigid jagged peaks, smoking stone chimneys, and warming alpine hearths.',
+  'The Deep Dark: Subterranean ruins, ancient reinforced deepslate portals, and sculk vibrations.',
+  'The Villager\'s Home: Vibrant village square with wheat harvests, market stalls, and emerald trades.',
+  'The Lost Paradise: Lush underground oasis with waterfalls, amethyst geodes, and swimming axolotls.',
+  'The Endless Void: Cosmic dimension with obsidian pillars, volatile crystals, and void dragon breath.',
 ];
 
 export const TopLeftInfo: React.FC = () => {

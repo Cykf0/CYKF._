@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { sounds } from './audio/soundManager';
 
 export type QualityLevel = 'low' | 'med' | 'high';
 
@@ -15,15 +16,15 @@ export interface BiomeMeta {
 }
 
 export const BIOMES: BiomeMeta[] = [
-  { index: 0, id: 'village-sunrise', name: 'Village', color: '#55FF55', skyColor: '#FFA756', hash: '#village', day: 1, time: '06:30', heldItem: 'diamond-pickaxe' },
-  { index: 1, id: 'cherry-grove', name: 'Cherry Grove', color: '#FFAACC', skyColor: '#FFAAC0', hash: '#profile', day: 1, time: '11:45', heldItem: 'none' },
-  { index: 2, id: 'stronghold', name: 'Stronghold', color: '#B388FF', skyColor: '#140A22', hash: '#enchantments', day: 1, time: '15:20', heldItem: 'book' },
-  { index: 3, id: 'mineshaft', name: 'Mineshaft', color: '#FFAA00', skyColor: '#120A05', hash: '#chest', day: 2, time: '18:10', heldItem: 'torch' },
-  { index: 4, id: 'snowy-peaks', name: 'Snowy Peaks', color: '#70C5FF', skyColor: '#82B2DD', hash: '#crafting', day: 2, time: '20:15', heldItem: 'compass' },
-  { index: 5, id: 'deep-dark', name: 'Deep Dark', color: '#00E5FF', skyColor: '#03070C', hash: '#advancements', day: 3, time: '00:40', heldItem: 'soul-lantern' },
-  { index: 6, id: 'village-interior', name: 'Village', color: '#55FF55', skyColor: '#22140A', hash: '#trades', day: 4, time: '13:00', heldItem: 'emerald' },
-  { index: 7, id: 'lush-caves', name: 'Lush Caves', color: '#55FF55', skyColor: '#0A2014', hash: '#connect', day: 5, time: '16:45', heldItem: 'feather' },
-  { index: 8, id: 'the-end', name: 'The End', color: '#D670D6', skyColor: '#080214', hash: '#end', day: 6, time: '21:50', heldItem: 'ender-pearl' }
+  { index: 0, id: 'village-sunrise', name: 'The Developer Archive', color: '#55FF55', skyColor: '#FFA756', hash: '#village', day: 1, time: '06:30', heldItem: 'diamond-pickaxe' },
+  { index: 1, id: 'cherry-grove', name: 'The Eternal Forest', color: '#55FF88', skyColor: '#64A388', hash: '#profile', day: 1, time: '11:45', heldItem: 'compass' },
+  { index: 2, id: 'stronghold', name: 'The Arcane Library', color: '#B388FF', skyColor: '#160C26', hash: '#enchantments', day: 1, time: '15:20', heldItem: 'book' },
+  { index: 3, id: 'mineshaft', name: 'The Abandoned Mines', color: '#FFAA00', skyColor: '#120A05', hash: '#chest', day: 2, time: '18:10', heldItem: 'torch' },
+  { index: 4, id: 'snowy-peaks', name: 'The Frozen Frontier', color: '#70C5FF', skyColor: '#82B2DD', hash: '#crafting', day: 2, time: '20:15', heldItem: 'diamond-axe' },
+  { index: 5, id: 'deep-dark', name: 'The Deep Dark', color: '#00E5FF', skyColor: '#03070C', hash: '#advancements', day: 3, time: '00:40', heldItem: 'soul-torch' },
+  { index: 6, id: 'village-interior', name: "The Villager's Home", color: '#FFD700', skyColor: '#F0C080', hash: '#trades', day: 4, time: '13:00', heldItem: 'emerald' },
+  { index: 7, id: 'lush-caves', name: 'The Lost Paradise', color: '#55FF55', skyColor: '#0A2014', hash: '#connect', day: 5, time: '16:45', heldItem: 'feather' },
+  { index: 8, id: 'the-end', name: 'The Endless Void', color: '#D670D6', skyColor: '#080214', hash: '#end', day: 6, time: '21:50', heldItem: 'soul-torch' }
 ];
 
 interface AppState {
@@ -47,6 +48,8 @@ interface AppState {
   // Settings & Audio
   isMuted: boolean;
   quality: QualityLevel;
+  isOptionsModalOpen: boolean;
+  setOptionsModalOpen: (val: boolean) => void;
 
   // Discovery & Rewards System
   discoveries: Record<string, boolean>;
@@ -58,6 +61,8 @@ interface AppState {
   selectedHotbarSlot: number;
   inventoryOpen: boolean;
   worldResetKey: number;
+  f3DebugMode: number; // 0=Off, 1=Albedo, 2=UV, 3=AtlasTile, 4=VertexColor, 5=AO, 6=LightLevel, 7=Normals, 8=Overdraw
+  cycleF3Debug: () => void;
 
   // Actions
   setScene: (index: number) => void;
@@ -74,6 +79,16 @@ interface AppState {
   eatFood: () => void;
   fastForwardTime: (hours?: number) => void;
   respawnToStart: () => void;
+
+  // Active Container GUI
+  activeGui: 'none' | 'enchanting' | 'crafting' | 'anvil' | 'chest' | 'villager';
+  setActiveGui: (gui: 'none' | 'enchanting' | 'crafting' | 'anvil' | 'chest' | 'villager') => void;
+
+  // Title & Intro State
+  isTitleScreen: boolean;
+  setTitleScreen: (val: boolean) => void;
+  showIntroGreeting: boolean;
+  setShowIntroGreeting: (val: boolean) => void;
 
   // Sandbox Actions
   recordDiscovery: (id: string, category: string, label: string) => boolean;
@@ -115,6 +130,8 @@ export const useStore = create<AppState>((set, get) => ({
 
   isMuted: typeof window !== 'undefined' ? localStorage.getItem('cykf_muted') === 'true' : false,
   quality: 'high',
+  isOptionsModalOpen: false,
+  setOptionsModalOpen: (val: boolean) => set({ isOptionsModalOpen: val }),
 
   discoveries: initialDiscoveries,
   discoveredCount: Object.keys(initialDiscoveries).length,
@@ -124,6 +141,19 @@ export const useStore = create<AppState>((set, get) => ({
   selectedHotbarSlot: 0,
   inventoryOpen: false,
   worldResetKey: 0,
+  f3DebugMode: 0,
+
+  activeGui: 'none',
+  setActiveGui: (gui: 'none' | 'enchanting' | 'crafting' | 'anvil' | 'chest' | 'villager') => set({ activeGui: gui }),
+
+  isTitleScreen: typeof window !== 'undefined' ? (!window.location.hash || window.location.hash === '#village') && !new URLSearchParams(window.location.search).has('skipTitle') : true,
+  setTitleScreen: (val: boolean) => set({ isTitleScreen: val }),
+  showIntroGreeting: false,
+  setShowIntroGreeting: (val: boolean) => set({ showIntroGreeting: val }),
+
+  cycleF3Debug: () => {
+    set((s) => ({ f3DebugMode: (s.f3DebugMode + 1) % 9 }));
+  },
 
   setScene: (index: number) => {
     const clamped = Math.max(0, Math.min(8, index));
@@ -135,8 +165,11 @@ export const useStore = create<AppState>((set, get) => ({
     // Scale XP with scene progression (up to level 30 on The End)
     const newLevel = [5, 7, 9, 13, 17, 21, 26, 28, 30][clamped] || 5;
 
+    sounds.setBiome(clamped);
+
     set({
       currentScene: clamped,
+      isTitleScreen: clamped === 0 ? get().isTitleScreen : false,
       xpLevel: newLevel,
       xpProgress: 0.1 + (clamped / 8) * 0.9,
       inGameDay: biome.day,
@@ -167,6 +200,11 @@ export const useStore = create<AppState>((set, get) => ({
     const next = !state.isMuted;
     if (typeof window !== 'undefined') {
       localStorage.setItem('cykf_muted', String(next));
+    }
+    if (next) {
+      if (!sounds.getState().isMasterMuted) sounds.toggleMasterMute();
+    } else {
+      if (sounds.getState().isMasterMuted) sounds.toggleMasterMute();
     }
     return { isMuted: next };
   }),

@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { useStore, BIOMES } from './store';
 import { SceneManager } from './world/SceneManager';
 import { PostProcessingPipeline } from './world/postprocessing/PostProcessingPipeline';
-import { sounds } from './audio/soundManager';
+import { sounds, AudioSettingsState } from './audio/soundManager';
 import { content } from './content';
 
 // HUD
@@ -14,6 +14,10 @@ import { EdgeArrows } from './hud/EdgeArrows';
 import { AdvancementToast } from './interaction/AdvancementToast';
 import { InventoryModal } from './interaction/InventoryModal';
 import { TouchMobileHints } from './interaction/TouchMobileHints';
+import { MinecraftHomeScreen } from './hud/MinecraftHomeScreen';
+import { VillageIntroDialog } from './hud/VillageIntroDialog';
+import { MinecraftGuis } from './interaction/MinecraftGuis';
+import { SettingsModal } from './hud/SettingsModal';
 
 // Panels
 import { Scene01TitleMenu } from './panels/Scene01TitleMenu';
@@ -35,6 +39,7 @@ const LoadingScreen: React.FC<{ onComplete: () => void }> = ({ onComplete }) => 
       setProgress((p) => {
         if (p >= 100) {
           clearInterval(interval);
+          sounds.playWorldLoad();
           setTimeout(onComplete, 250);
           return 100;
         }
@@ -73,15 +78,41 @@ export const App: React.FC = () => {
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const [isLoading, setIsLoading] = useState(!searchParams?.has('skipLoading'));
   const currentScene = useStore((s) => s.currentScene);
+  const isTitleScreen = useStore((s) => s.isTitleScreen);
   const isMuted = useStore((s) => s.isMuted);
   const toggleMute = useStore((s) => s.toggleMute);
   const quality = useStore((s) => s.quality);
   const setQuality = useStore((s) => s.setQuality);
+  const setOptionsModalOpen = useStore((s) => s.setOptionsModalOpen);
+
+  const [audioState, setAudioState] = useState<AudioSettingsState>(sounds.getState());
+
+  useEffect(() => {
+    const unsub = sounds.subscribe((next) => {
+      setAudioState(next);
+    });
+    return unsub;
+  }, []);
+
+  // Universal audio unlock on user gesture
+  useEffect(() => {
+    const handleGesture = () => {
+      sounds.unlock();
+    };
+    window.addEventListener('pointerdown', handleGesture, { once: true });
+    window.addEventListener('keydown', handleGesture, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', handleGesture);
+      window.removeEventListener('keydown', handleGesture);
+    };
+  }, []);
 
   // Background audio unlock on click
   const handleUserClick = () => {
     sounds.unlock();
   };
+
+  const currentTrack = sounds.getCurrentTrack();
 
   return (
     <main
@@ -92,7 +123,7 @@ export const App: React.FC = () => {
       {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
 
       {/* Top Left Global Info */}
-      <TopLeftInfo />
+      {!isTitleScreen && <TopLeftInfo />}
 
       {/* Advancement Toast Notification */}
       <AdvancementToast />
@@ -100,40 +131,91 @@ export const App: React.FC = () => {
       {/* Survival Inventory Modal [E] */}
       <InventoryModal />
 
+      {/* Minecraft Container GUIs (Enchanting, Crafting, Anvil, Chest, Villager) */}
+      <MinecraftGuis />
+
+      {/* Settings & Music Player Modal */}
+      <SettingsModal />
+
       {/* Mobile Touch Hints */}
-      <TouchMobileHints />
+      {!isTitleScreen && <TouchMobileHints />}
 
-      {/* Top Right Quick Controls (Mute / Quality) */}
-      <header className="fixed top-5 right-6 z-40 flex items-center gap-2 select-none pointer-events-auto">
-        {/* Quality Toggle */}
-        <button
-          onClick={() => {
-            sounds.playClick();
-            setQuality(quality === 'high' ? 'med' : quality === 'med' ? 'low' : 'high');
-          }}
-          className="px-2.5 py-1.5 mc-button font-pixel text-[9px] uppercase tracking-wider"
-          title="Toggle Rendering Quality"
-        >
-          {quality} Q
-        </button>
+      {/* Minecraft Full Title / Home Screen */}
+      {isTitleScreen && <MinecraftHomeScreen />}
 
-        {/* Audio Mute Toggle */}
-        <button
-          onClick={() => {
-            sounds.playClick();
-            toggleMute();
-          }}
-          className={`px-2.5 py-1.5 mc-button font-pixel text-[9px] uppercase tracking-wider ${
-            isMuted ? 'text-red-400' : 'text-mc-village'
-          }`}
-          title="Toggle SFX Mute [M]"
-        >
-          {isMuted ? '🔇 Muted' : '🔊 Sound'}
-        </button>
-      </header>
+      {/* Village Intro Dialog */}
+      <VillageIntroDialog />
+
+      {/* Top Right Quick Controls (Music Pill / Settings Gear / Quality / Mute) */}
+      {!isTitleScreen && (
+        <header className="fixed top-5 right-6 z-40 flex items-center gap-2 select-none pointer-events-auto">
+          {/* Quick Music Pill */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              sounds.toggleMusic();
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              sounds.playClick();
+              setOptionsModalOpen(true);
+            }}
+            className={`px-2.5 py-1.5 mc-button font-pixel text-[9px] uppercase tracking-wider flex items-center gap-1.5 ${
+              audioState.isMusicPlaying ? 'text-mc-village' : 'text-gray-400'
+            }`}
+            title="Toggle Music (Right-click for Settings)"
+          >
+            <span className={audioState.isMusicPlaying ? 'animate-pulse text-[10px]' : 'text-[10px]'}>
+              {audioState.isMusicPlaying ? '🎵' : '⏸'}
+            </span>
+            <span className="hidden md:inline max-w-[100px] truncate">
+              {currentTrack.title}
+            </span>
+          </button>
+
+          {/* Settings Gear Button */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setOptionsModalOpen(true);
+            }}
+            className="px-2.5 py-1.5 mc-button font-pixel text-[9px] uppercase tracking-wider flex items-center gap-1 text-gray-200 hover:text-white"
+            title="Minecraft Settings and Audio [O]"
+          >
+            <span>⚙️</span>
+            <span className="hidden sm:inline">Options</span>
+          </button>
+
+          {/* Quality Toggle */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              setQuality(quality === 'high' ? 'med' : quality === 'med' ? 'low' : 'high');
+            }}
+            className="px-2.5 py-1.5 mc-button font-pixel text-[9px] uppercase tracking-wider"
+            title="Toggle Rendering Quality"
+          >
+            {quality} Q
+          </button>
+
+          {/* Audio Mute Toggle */}
+          <button
+            onClick={() => {
+              sounds.playClick();
+              toggleMute();
+            }}
+            className={`px-2.5 py-1.5 mc-button font-pixel text-[9px] uppercase tracking-wider ${
+              isMuted ? 'text-red-400' : 'text-mc-village'
+            }`}
+            title="Toggle SFX Mute [M]"
+          >
+            {isMuted ? '🔇 Muted' : '🔊 Sound'}
+          </button>
+        </header>
+      )}
 
       {/* Edge Navigation Arrow Buttons */}
-      <EdgeArrows />
+      {!isTitleScreen && <EdgeArrows />}
 
       {/* 3D Real-time Scene Viewport */}
       <div className="absolute inset-0 w-full h-full">
@@ -158,7 +240,7 @@ export const App: React.FC = () => {
 
       {/* Active Scene UI Panels */}
       <section aria-live="polite">
-        {currentScene === 0 && <Scene01TitleMenu />}
+        {currentScene === 0 && !isTitleScreen && <Scene01TitleMenu />}
         {currentScene === 1 && <Scene02ProfilePanel />}
         {currentScene === 2 && <Scene03EnchantmentsPanel />}
         {currentScene === 3 && <Scene04ChestPanel />}
@@ -170,10 +252,12 @@ export const App: React.FC = () => {
       </section>
 
       {/* Bottom Center Global HUD (Status Bars + 9-slot Hotbar) */}
-      <nav aria-label="Minecraft Hotbar" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-1.5 pointer-events-none">
-        <StatusBars />
-        <Hotbar />
-      </nav>
+      {!isTitleScreen && (
+        <nav aria-label="Minecraft Hotbar" className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-1.5 pointer-events-none">
+          <StatusBars />
+          <Hotbar />
+        </nav>
+      )}
     </main>
   );
 };

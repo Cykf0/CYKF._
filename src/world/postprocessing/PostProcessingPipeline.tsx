@@ -40,19 +40,19 @@ const SCENE_POST_PRESETS: PostConfig[] = [
     saturation: 0.12,
     chromaticAberration: 0.0006,
   },
-  // Scene 2: Cherry Grove (Dreamy Pink Airy)
+  // Scene 2: Profile (Rose Sunset Spruce Shoreline Reference Match)
   {
-    bloomIntensity: 1.2,
-    bloomThreshold: 0.78,
+    bloomIntensity: 1.6,
+    bloomThreshold: 0.72,
     dofEnabled: false,
     dofTarget: 5.5,
     dofFocalLength: 0.08,
     dofBokehScale: 2.2,
-    vignetteDarkness: 0.35,
-    vignetteOffset: 0.45,
-    hue: -0.05,
-    saturation: 0.15,
-    chromaticAberration: 0.0008,
+    vignetteDarkness: 0.42,
+    vignetteOffset: 0.38,
+    hue: -0.04,
+    saturation: 0.22,
+    chromaticAberration: 0.0009,
   },
   // Scene 3: Stronghold Library (Mystic Purple / Arcane)
   {

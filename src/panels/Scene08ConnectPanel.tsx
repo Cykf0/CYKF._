@@ -6,6 +6,7 @@ import { sounds } from '../audio/soundManager';
 export const Scene08ConnectPanel: React.FC = () => {
   const setScene = useStore((s) => s.setScene);
   const [copiedEmail, setCopiedEmail] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   const handleCopyEmail = () => {
     sounds.playClick();
@@ -16,15 +17,45 @@ export const Scene08ConnectPanel: React.FC = () => {
     }
   };
 
+  if (!isOpen) {
+    return (
+      <button
+        onClick={() => {
+          sounds.playClick();
+          setIsOpen(true);
+        }}
+        className="absolute top-[14%] left-[4%] z-30 mc-button px-3 py-1.5 font-pixel text-xs text-white/90 hover:text-white flex items-center gap-2 pointer-events-auto shadow-lg"
+        title="Open Connect Panel"
+      >
+        <span>✉ Connect & Links</span>
+        <span className="text-[10px] text-[#FFAA00]">▶</span>
+      </button>
+    );
+  }
+
   return (
-    <div className="absolute top-[14%] left-[6%] z-30 w-[380px] sm:w-[440px] mc-parchment p-6 select-none pointer-events-auto shadow-2xl">
-      {/* Title */}
-      <h2 className="font-pixel text-base text-[#2C1E14] tracking-wider">
-        Let's Connect
-      </h2>
-      <p className="mt-1 font-body text-xs text-[#5C4533] italic">
-        Send word and I will answer within a day.
-      </p>
+    <div className="absolute top-[14%] left-[4%] sm:left-[6%] z-30 w-[360px] sm:w-[420px] mc-parchment p-5 sm:p-6 select-none pointer-events-auto shadow-2xl">
+      {/* Title with Small Corner Close Button */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="font-pixel text-base text-[#2C1E14] tracking-wider">
+            Let's Connect
+          </h2>
+          <p className="mt-1 font-body text-xs text-[#5C4533] italic">
+            Send word and I will answer within a day.
+          </p>
+        </div>
+        <button
+          onClick={() => {
+            sounds.playClick();
+            setIsOpen(false);
+          }}
+          className="w-5 h-5 mc-button font-pixel text-[10px] text-gray-200 hover:text-white flex items-center justify-center shrink-0 cursor-pointer"
+          title="Close"
+        >
+          ✕
+        </button>
+      </div>
 
       {/* Rows */}
       <div className="mt-5 space-y-4 font-body border-t border-b border-[#A68F74] py-4">

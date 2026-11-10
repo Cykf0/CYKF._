@@ -10,7 +10,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import zlib from 'zlib';
+import { PNG } from 'pngjs';
 
 const TEXTUREPACK_DIR = 'public/texturepack/assets/minecraft/textures/block';
 const OUTPUT_PNG = 'public/atlas.png';
@@ -23,126 +23,18 @@ if (!fs.existsSync(TEXTUREPACK_DIR)) {
 }
 
 // ---------------------------------------------------------------------------
-// 1. Pure Node PNG Reader & Writer
+// 1. PNG Reader & Writer using pngjs (handles paletted/indexed and truecolor PNGs)
 // ---------------------------------------------------------------------------
 
 function decodePNG(buf) {
-  if (buf.readUInt32BE(0) !== 0x89504E47) throw new Error('Invalid PNG header');
-  let pos = 8;
-  let width = 0;
-  let height = 0;
-  const idatChunks = [];
-
-  while (pos < buf.length) {
-    const len = buf.readUInt32BE(pos);
-    const type = buf.toString('ascii', pos + 4, pos + 8);
-    if (type === 'IHDR') {
-      width = buf.readUInt32BE(pos + 8);
-      height = buf.readUInt32BE(pos + 12);
-    } else if (type === 'IDAT') {
-      idatChunks.push(buf.subarray(pos + 8, pos + 8 + len));
-    } else if (type === 'IEND') {
-      break;
-    }
-    pos += 12 + len;
-  }
-
-  const decompressed = zlib.inflateSync(Buffer.concat(idatChunks));
-  const bpp = 4;
-  const stride = 1 + width * bpp;
-  const out = Buffer.alloc(width * height * bpp);
-
-  const paeth = (a, b, c) => {
-    const p = a + b - c;
-    const pa = Math.abs(p - a);
-    const pb = Math.abs(p - b);
-    const pc = Math.abs(p - c);
-    return (pa <= pb && pa <= pc) ? a : (pb <= pc ? b : c);
-  };
-
-  for (let y = 0; y < height; y++) {
-    const filter = decompressed[y * stride];
-    const curr = y * width * bpp;
-    const prev = (y - 1) * width * bpp;
-
-    for (let x = 0; x < width * bpp; x++) {
-      const raw = decompressed[y * stride + 1 + x];
-      const a = x >= bpp ? out[curr + x - bpp] : 0;
-      const b = y > 0 ? out[prev + x] : 0;
-      const c = (x >= bpp && y > 0) ? out[prev + x - bpp] : 0;
-
-      let val = raw;
-      if (filter === 1) val = (raw + a) & 0xff;
-      else if (filter === 2) val = (raw + b) & 0xff;
-      else if (filter === 3) val = (raw + Math.floor((a + b) / 2)) & 0xff;
-      else if (filter === 4) val = (raw + paeth(a, b, c)) & 0xff;
-
-      out[curr + x] = val;
-    }
-  }
-
-  return { width, height, data: out };
+  const png = PNG.sync.read(buf);
+  return { width: png.width, height: png.height, data: png.data };
 }
 
 function encodePNG(width, height, rgbaBuffer) {
-  const scanlineWidth = 1 + width * 4;
-  const rawData = Buffer.alloc(scanlineWidth * height);
-
-  for (let y = 0; y < height; y++) {
-    const rawOffset = y * scanlineWidth;
-    rawData[rawOffset] = 0; // Filter 0: None
-    rgbaBuffer.copy(rawData, rawOffset + 1, y * width * 4, (y + 1) * width * 4);
-  }
-
-  const deflated = zlib.deflateSync(rawData);
-
-  const crcTable = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) {
-      c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
-    }
-    crcTable[n] = c;
-  }
-
-  const crc32 = (buf) => {
-    let crc = 0xffffffff;
-    for (let i = 0; i < buf.length; i++) {
-      crc = crcTable[(crc ^ buf[i]) & 0xff] ^ (crc >>> 8);
-    }
-    return (crc ^ 0xffffffff) >>> 0;
-  };
-
-  const makeChunk = (typeStr, dataBuf) => {
-    const typeBuf = Buffer.from(typeStr, 'ascii');
-    const len = dataBuf ? dataBuf.length : 0;
-    const lenBuf = Buffer.alloc(4);
-    lenBuf.writeUInt32BE(len, 0);
-
-    const chunkData = dataBuf ? Buffer.concat([typeBuf, dataBuf]) : typeBuf;
-    const crcVal = crc32(chunkData);
-    const crcBuf = Buffer.alloc(4);
-    crcBuf.writeUInt32BE(crcVal, 0);
-
-    return Buffer.concat([lenBuf, chunkData, crcBuf]);
-  };
-
-  const sig = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; // 8-bit
-  ihdr[9] = 6; // RGBA
-  ihdr[10] = 0;
-  ihdr[11] = 0;
-  ihdr[12] = 0;
-
-  return Buffer.concat([
-    sig,
-    makeChunk('IHDR', ihdr),
-    makeChunk('IDAT', deflated),
-    makeChunk('IEND', null)
-  ]);
+  const png = new PNG({ width, height });
+  rgbaBuffer.copy(png.data);
+  return PNG.sync.write(png);
 }
 
 // ---------------------------------------------------------------------------
@@ -207,10 +99,19 @@ const VANILLA_PALETTES = {
   purpur_block: ['#a97d9e', '#9b6f90', '#b58ba6', '#8a5e7f', '#6c4361'],
   amethyst_block: ['#8562c4', '#7853b8', '#9974d6', '#6944a9', '#ba99ec'],
   moss_block: ['#596e2d', '#647c33', '#4e6126', '#728c3b', '#3e4f1d'],
+  dirt_path_top: ['#8c6737', '#966f3d', '#825e30', '#78562c', '#a07742'],
+  dirt_path_side: ['#866043', '#725138', '#5c402c', '#8c6737'],
+  farmland: ['#442d1b', '#382313', '#4d3420', '#301c0d'],
+  end_portal_frame_top: ['#284236', '#1b3026', '#355647', '#dcdba3'],
+  end_portal_frame_side: ['#dcdba3', '#eae8b8', '#284236', '#1b3026'],
 };
 
 // Generate authentic fallback 16x16 buffer for a block
 function generateFallbackTexture(name) {
+  if (name === 'missing') {
+    return generateMissingTexture();
+  }
+
   // 1. Grass block top (biome-tinted greyscale / green)
   if (name === 'grass_block_top') {
     return create16x16((x, y) => {
@@ -437,7 +338,50 @@ function generateFallbackTexture(name) {
     });
   }
 
-  // 18. Default from Palette Table
+  // 18. Dirt Path Top
+  if (name === 'dirt_path_top') {
+    const pathColors = VANILLA_PALETTES.dirt_path_top;
+    return create16x16((x, y) => {
+      const h = pixelHash(x, y, 118) % pathColors.length;
+      return hexToRgba(pathColors[h]);
+    });
+  }
+
+  // 19. Dirt Path Side
+  if (name === 'dirt_path_side') {
+    const dirtColors = VANILLA_PALETTES.dirt;
+    const pathCrust = ['#8c6737', '#966f3d', '#78562c'];
+    return create16x16((x, y) => {
+      if (y < 2) {
+        const ph = pixelHash(x, y, 119) % pathCrust.length;
+        return hexToRgba(pathCrust[ph]);
+      }
+      const dh = pixelHash(x, y, 120) % dirtColors.length;
+      return hexToRgba(dirtColors[dh]);
+    });
+  }
+
+  // 20. End Portal Frame Top
+  if (name === 'end_portal_frame_top') {
+    return create16x16((x, y) => {
+      const isEdge = x <= 1 || x >= 14 || y <= 1 || y >= 14;
+      const isEyeSocket = x >= 4 && x <= 11 && y >= 4 && y <= 11;
+      if (isEyeSocket) return hexToRgba('#051e18');
+      if (isEdge) return hexToRgba('#284236');
+      return hexToRgba('#dcdba3');
+    });
+  }
+
+  // 21. End Portal Frame Side
+  if (name === 'end_portal_frame_side') {
+    return create16x16((x, y) => {
+      if (y < 4) return hexToRgba('#284236');
+      const sh = pixelHash(x, y, 121) % VANILLA_PALETTES.end_stone.length;
+      return hexToRgba(VANILLA_PALETTES.end_stone[sh]);
+    });
+  }
+
+  // 22. Default from Palette Table
   const palette = VANILLA_PALETTES[name] || VANILLA_PALETTES.stone;
   return create16x16((x, y) => {
     const h = pixelHash(x, y, 200) % palette.length;
@@ -445,11 +389,54 @@ function generateFallbackTexture(name) {
   });
 }
 
+// Classic Minecraft purple & black missing-texture checkerboard (8x8 quadrants)
+function generateMissingTexture() {
+  const buf = Buffer.alloc(16 * 16 * 4);
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const isMagenta = (Math.floor(x / 8) + Math.floor(y / 8)) % 2 === 0;
+      const idx = (y * 16 + x) * 4;
+      if (isMagenta) {
+        buf[idx] = 248;     // R
+        buf[idx + 1] = 0;   // G
+        buf[idx + 2] = 248; // B
+        buf[idx + 3] = 255; // A
+      } else {
+        buf[idx] = 0;
+        buf[idx + 1] = 0;
+        buf[idx + 2] = 0;
+        buf[idx + 3] = 255;
+      }
+    }
+  }
+  return buf;
+}
+
 // ---------------------------------------------------------------------------
 // 3. Main Atlas Builder
 // ---------------------------------------------------------------------------
 
+const BIOME_TINTS = {
+  grass_block_top: [121, 192, 90], // #79c05a Plains Grass Green
+  oak_leaves: [72, 181, 24],       // #48b518 Vibrant Oak Foliage
+  birch_leaves: [128, 167, 85],    // #80a755 Birch Leaves
+  spruce_leaves: [97, 153, 97],    // #619961 Spruce Evergreen
+  jungle_leaves: [48, 187, 11],    // #30bb0b Jungle Leaves
+  acacia_leaves: [174, 195, 46],   // #aec32e Acacia Leaves
+  dark_oak_leaves: [64, 123, 26],  // #407b1a Dark Oak Leaves
+  mangrove_leaves: [104, 166, 42], // #68a62a Mangrove Leaves
+  vine: [72, 181, 24],             // #48b518 Hanging Vines
+  lily_pad: [40, 128, 50],         // #288032 Authentic Swamp Lily Pad
+  short_grass: [121, 192, 90],
+  tall_grass_top: [121, 192, 90],
+  tall_grass_bottom: [121, 192, 90],
+  fern: [121, 192, 90],
+  large_fern_top: [121, 192, 90],
+  large_fern_bottom: [121, 192, 90],
+};
+
 const BLOCKS_TO_PACK = [
+  'missing',
   'grass_block_top',
   'grass_block_side',
   'grass_block_side_overlay',
@@ -461,10 +448,19 @@ const BLOCKS_TO_PACK = [
   'stone_bricks',
   'mossy_stone_bricks',
   'cracked_stone_bricks',
+  'chiseled_stone_bricks',
   'oak_planks',
   'oak_log',
   'oak_log_top',
   'oak_leaves',
+  'dark_oak_planks',
+  'dark_oak_log',
+  'dark_oak_log_top',
+  'dark_oak_leaves',
+  'spruce_planks',
+  'spruce_log',
+  'spruce_log_top',
+  'spruce_leaves',
   'cherry_planks',
   'cherry_log',
   'cherry_log_top',
@@ -477,12 +473,19 @@ const BLOCKS_TO_PACK = [
   'crafting_table_top',
   'crafting_table_front',
   'crafting_table_side',
+  'furnace_front',
+  'furnace_side',
+  'furnace_top',
   'coal_ore',
   'iron_ore',
   'gold_ore',
   'redstone_ore',
   'diamond_ore',
   'emerald_ore',
+  'iron_block',
+  'gold_block',
+  'diamond_block',
+  'emerald_block',
   'glowstone',
   'sea_lantern',
   'snow',
@@ -493,13 +496,123 @@ const BLOCKS_TO_PACK = [
   'purpur_block',
   'amethyst_block',
   'moss_block',
+  'dripstone_block',
   'sand',
   'gravel',
   'clay',
   'glass',
   'water_still',
   'lava_still',
-  'torch'
+  'dirt_path_top',
+  'dirt_path_side',
+  'farmland',
+  'end_portal_frame_top',
+  'end_portal_frame_side',
+  'torch',
+  'lantern',
+  'soul_lantern',
+  'chain',
+  'vine',
+  'lily_pad',
+  'cave_vines',
+  'cave_vines_lit',
+  'cave_vines_plant',
+  'cave_vines_plant_lit',
+  'crying_obsidian',
+  'respawn_anchor_top',
+  'respawn_anchor_side',
+  'short_grass',
+  'tall_grass_top',
+  'tall_grass_bottom',
+  'fern',
+  'large_fern_top',
+  'large_fern_bottom',
+  'dandelion',
+  'poppy',
+  'oxeye_daisy',
+  'cornflower',
+  'allium',
+  'sunflower_front',
+  'sunflower_back',
+  'sunflower_top',
+  'sunflower_bottom',
+  'smooth_stone',
+  'quartz_block_side',
+  'podzol_top',
+  'podzol_side',
+  'sugar_cane',
+  'lilac_top',
+  'lilac_bottom',
+  // Scene 3 Stronghold / Ancient Cave Library Assets
+  'enchanting_table_top',
+  'enchanting_table_side',
+  'enchanting_table_bottom',
+  'anvil',
+  'anvil_top',
+  'chipped_anvil_top',
+  'damaged_anvil_top',
+  'purple_candle',
+  'purple_candle_lit',
+  'spore_blossom',
+  'spore_blossom_base',
+  'grindstone_pivot',
+  'grindstone_round',
+  'grindstone_side',
+  'tuff',
+  'andesite',
+  'polished_andesite',
+  'flowering_azalea_leaves',
+  'azalea_leaves',
+  'azalea_side',
+  'azalea_top',
+  'pointed_dripstone_down_base',
+  'pointed_dripstone_down_middle',
+  'pointed_dripstone_down_tip',
+  // Kingdom & Village assets (Scene 1 & Scene 7)
+  'hay_block_side',
+  'hay_block_top',
+  'white_wool',
+  'ladder',
+  'barrel_top',
+  'barrel_side',
+  'composter_top',
+  'composter_side',
+  'cauldron_side',
+  'cauldron_top',
+  'carrots_stage3',
+  'wheat_stage7',
+  // Forest & Mushrooms (Scene 2)
+  'red_mushroom_block',
+  'brown_mushroom_block',
+  'mushroom_stem',
+  'red_mushroom',
+  'brown_mushroom',
+  // Mineshaft & Rails (Scene 4)
+  'rail',
+  'rail_corner',
+  'powered_rail',
+  'spawner',
+  // Snow & Ice (Scene 5)
+  'packed_ice',
+  'blue_ice',
+  'campfire_fire',
+  'campfire_log',
+  // Deep Dark & Sculk (Scene 6)
+  'sculk_catalyst_top',
+  'sculk_catalyst_side',
+  'sculk_shrieker_top',
+  'sculk_shrieker_side',
+  'sculk_sensor_top',
+  'sculk_sensor_side',
+  'soul_sand',
+  // Lush Caves & Amethyst (Scene 8)
+  'amethyst_cluster',
+  'budding_amethyst',
+  // The End (Scene 9)
+  'purpur_pillar',
+  'chorus_plant',
+  'chorus_flower',
+  'end_rod'
 ];
 
 async function buildAtlas() {
@@ -518,11 +631,11 @@ async function buildAtlas() {
         const fileBytes = fs.readFileSync(filePath);
         const decoded = decodePNG(fileBytes);
         if (decoded.width === 16 && decoded.height === 16) {
-          tileBuffer = decoded.data;
+          tileBuffer = Buffer.from(decoded.data);
           foundFiles.push(filePath);
         } else if (decoded.width === 16 && decoded.height > 16) {
           // Animated strip: extract first frame
-          tileBuffer = decoded.data.subarray(0, 16 * 16 * 4);
+          tileBuffer = Buffer.from(decoded.data.subarray(0, 16 * 16 * 4));
           foundFiles.push(`${filePath} (animated strip: ${decoded.height / 16} frames)`);
         } else {
           console.warn(`[WARN] ${filePath} dimension ${decoded.width}x${decoded.height} not 16x16. Using fallback.`);
@@ -535,6 +648,18 @@ async function buildAtlas() {
     if (!tileBuffer) {
       tileBuffer = generateFallbackTexture(blockName);
       missingFiles.push(`assets/minecraft/textures/block/${blockName}.png`);
+    }
+
+    // Apply Biome Tinting (for greyscale templates like grass_block_top, leaves, vines, lily pads)
+    if (tileBuffer && BIOME_TINTS[blockName]) {
+      const [tr, tg, tb] = BIOME_TINTS[blockName];
+      for (let i = 0; i < tileBuffer.length; i += 4) {
+        if (tileBuffer[i + 3] > 0) {
+          tileBuffer[i] = Math.min(255, Math.round((tileBuffer[i] * tr) / 255));
+          tileBuffer[i + 1] = Math.min(255, Math.round((tileBuffer[i + 1] * tg) / 255));
+          tileBuffer[i + 2] = Math.min(255, Math.round((tileBuffer[i + 2] * tb) / 255));
+        }
+      }
     }
 
     textures.set(blockName, tileBuffer);
@@ -686,6 +811,7 @@ async function buildAtlas() {
   const pngData = encodePNG(ATLAS_SIZE, ATLAS_SIZE, atlasBuffer);
   fs.writeFileSync(OUTPUT_PNG, pngData);
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(atlasJson, null, 2), 'utf8');
+  fs.writeFileSync('src/world/atlasData.json', JSON.stringify(atlasJson, null, 2), 'utf8');
 
   console.log(`[SUCCESS] Generated ${OUTPUT_PNG} (${ATLAS_SIZE}x${ATLAS_SIZE}, ${pngData.length} bytes)`);
   console.log(`[SUCCESS] Generated ${OUTPUT_JSON} (${Object.keys(atlasJson.tiles).length} tiles packed)`);

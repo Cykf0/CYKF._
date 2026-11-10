@@ -1,13 +1,15 @@
 import React, { useRef, useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { createMinecraftBoxGeometry, loadAndProcessSkin, ProcessedSkinData } from './SkinTexture';
+import { createMinecraftBoxGeometry, loadAndProcessSkin, ProcessedSkinData, getDefaultSkinData } from './SkinTexture';
 import { Nametag } from './Nametag';
 import { content } from '../content';
 import { Interactable } from '../interaction/Interactable';
 import { sounds } from '../audio/soundManager';
 import { useStore } from '../store';
 import { getItemTexture3D } from '../utils/itemIcons';
+import { create3DVoxelItemGeometry } from './VoxelItemGeometry';
+import { DIAMOND_PICKAXE_VOXELS, SOUL_TORCH_VOXELS } from './VoxelItemData';
 
 export interface PlayerModelProps {
   skinUrl?: string;
@@ -38,7 +40,7 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
   const rightLegPivotRef = useRef<THREE.Group>(null);
   const leftLegPivotRef = useRef<THREE.Group>(null);
 
-  const [skinData, setSkinData] = useState<ProcessedSkinData | null>(null);
+  const [skinData, setSkinData] = useState<ProcessedSkinData>(() => getDefaultSkinData());
   const [hatVisible, setHatVisible] = useState(true);
   const [nodAnimation, setNodAnimation] = useState<number | null>(null);
   const [armSwingAnimation, setArmSwingAnimation] = useState<number | null>(null);
@@ -136,9 +138,12 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
       groupRef.current.rotation.y = rotation[1] + extraRotationY;
     }
 
-    // 1. Idle breathing
+    // 1. Idle breathing & natural torso bob
     if (bodyRef.current) {
-      bodyRef.current.position.y = 18 + Math.sin(t * 2) * 0.15;
+      const breathBob = pose === 'walking' 
+        ? Math.abs(Math.sin(t * 4.2)) * 0.35 
+        : Math.sin(t * 1.8) * 0.12;
+      bodyRef.current.position.y = 18 + breathBob;
     }
 
     // 2. Head Tracking & Nodding
@@ -152,14 +157,90 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
         }
       } else if (cursorTracking) {
         const mouse = state.pointer; // normalized [-1, 1]
-        const targetYaw = THREE.MathUtils.clamp(-mouse.x * 0.7, -0.65, 0.65);
+        const targetYaw = THREE.MathUtils.clamp(mouse.x * 0.7, -0.65, 0.65);
         const targetPitch = THREE.MathUtils.clamp(-mouse.y * 0.45, -0.4, 0.4);
         headPivotRef.current.rotation.y = THREE.MathUtils.damp(headPivotRef.current.rotation.y, targetYaw, 6, delta);
         headPivotRef.current.rotation.x = THREE.MathUtils.damp(headPivotRef.current.rotation.x, targetPitch, 6, delta);
+      } else if (pose === 'look-back') {
+        const targetYaw = 2.4 + Math.sin(t * 1.2) * 0.08;
+        headPivotRef.current.rotation.y = THREE.MathUtils.damp(headPivotRef.current.rotation.y, targetYaw, 4, delta);
       }
     }
 
-    // 3. Arm swing on click
+    // 3. Synchronized Poses and Limb Animations
+    if (pose === 'waving') {
+      if (rightArmPivotRef.current && armSwingAnimation === null) {
+        // Right arm raised high in energetic, natural waving greeting (pointing up and away from face)
+        const waveAngle = Math.sin(t * 5.0) * 0.35;
+        rightArmPivotRef.current.rotation.z = -2.3 - waveAngle;
+        rightArmPivotRef.current.rotation.x = -0.15 + Math.cos(t * 2.5) * 0.08;
+        rightArmPivotRef.current.rotation.y = 0.2;
+      }
+      if (leftArmPivotRef.current) {
+        leftArmPivotRef.current.rotation.x = Math.sin(t * 1.8) * 0.04;
+        leftArmPivotRef.current.rotation.z = -0.06;
+      }
+      if (rightLegPivotRef.current && kickAnimation === null) {
+        rightLegPivotRef.current.rotation.x = 0;
+      }
+      if (leftLegPivotRef.current && kickAnimation === null) {
+        leftLegPivotRef.current.rotation.x = 0;
+      }
+    } else if (pose === 'walking') {
+      const walkCycle = Math.sin(t * 4.2);
+      if (rightLegPivotRef.current && kickAnimation === null) {
+        rightLegPivotRef.current.rotation.x = walkCycle * 0.55;
+      }
+      if (leftLegPivotRef.current && kickAnimation === null) {
+        leftLegPivotRef.current.rotation.x = -walkCycle * 0.55;
+      }
+      if (rightArmPivotRef.current && armSwingAnimation === null) {
+        rightArmPivotRef.current.rotation.x = -walkCycle * 0.45;
+        rightArmPivotRef.current.rotation.z = 0.05;
+      }
+      if (leftArmPivotRef.current) {
+        leftArmPivotRef.current.rotation.x = walkCycle * 0.45;
+        leftArmPivotRef.current.rotation.z = -0.05;
+      }
+    } else if (pose === 'holding') {
+      if (rightArmPivotRef.current && armSwingAnimation === null) {
+        // Holding tool / pickaxe / lantern forward
+        rightArmPivotRef.current.rotation.x = -1.1 + Math.sin(t * 1.8) * 0.03;
+        rightArmPivotRef.current.rotation.y = -0.15;
+        rightArmPivotRef.current.rotation.z = 0.08;
+      }
+      if (leftArmPivotRef.current) {
+        leftArmPivotRef.current.rotation.x = Math.sin(t * 1.8) * 0.04;
+        leftArmPivotRef.current.rotation.z = -0.05;
+      }
+      if (rightLegPivotRef.current && kickAnimation === null) {
+        rightLegPivotRef.current.rotation.x = 0;
+      }
+      if (leftLegPivotRef.current && kickAnimation === null) {
+        leftLegPivotRef.current.rotation.x = 0;
+      }
+    } else {
+      // Default Idle
+      if (rightArmPivotRef.current && armSwingAnimation === null) {
+        const toolHoldingBias = heldItem !== 'none' ? -0.08 : 0;
+        rightArmPivotRef.current.rotation.x = toolHoldingBias + Math.sin(t * 1.8) * 0.03;
+        rightArmPivotRef.current.rotation.z = 0.04;
+        rightArmPivotRef.current.rotation.y = 0;
+      }
+      if (leftArmPivotRef.current) {
+        leftArmPivotRef.current.rotation.x = -Math.sin(t * 1.8) * 0.04;
+        leftArmPivotRef.current.rotation.z = -0.05;
+        leftArmPivotRef.current.rotation.y = 0;
+      }
+      if (rightLegPivotRef.current && kickAnimation === null) {
+        rightLegPivotRef.current.rotation.x = 0;
+      }
+      if (leftLegPivotRef.current && kickAnimation === null) {
+        leftLegPivotRef.current.rotation.x = 0;
+      }
+    }
+
+    // 4. Arm swing on click override
     if (armSwingAnimation !== null && rightArmPivotRef.current) {
       const elapsed = (Date.now() - armSwingAnimation) / 1000;
       if (elapsed > 0.4) {
@@ -169,7 +250,7 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
       }
     }
 
-    // 4. Kick on click
+    // 5. Kick on click override
     if (kickAnimation !== null && rightLegPivotRef.current) {
       const elapsed = (Date.now() - kickAnimation) / 1000;
       if (elapsed > 0.4) {
@@ -299,7 +380,7 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
 
         {/* Held Item in Right Hand */}
         {heldItem !== 'none' && (
-          <group position={[0, -9, 2]} rotation={[0.4, 0, 0]}>
+          <group position={[0, -9.5, 0.4]} rotation={[0.2, 0, 0]}>
             <Interactable
               id={`player_held_${heldItem}`}
               name={`Held ${heldItem}`}
@@ -309,7 +390,7 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
                 useStore.getState().recordDiscovery(`player_held_${heldItem}`, 'ITEM', `Held Item: ${heldItem}`);
               }}
             >
-              <HeldItemMesh type={heldItem} />
+              <HeldItemMesh type={heldItem} pose={pose} />
             </Interactable>
           </group>
         )}
@@ -370,72 +451,90 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
 };
 
 /**
- * 3D Low-Poly Held Items
+ * 3D True Extruded Voxel Items
+ * Adapts to both idle tool carrying (media_1794344619118_66476b0d.png)
+ * and active holding/mining pose (media_1794344290756_5d19728c.png)
  */
-export const HeldItemMesh: React.FC<{ type: string }> = ({ type }) => {
+const CustomDiamondPickaxeHeld: React.FC<{ pose?: string }> = ({ pose = 'idle' }) => {
+  const geom = useMemo(() => {
+    // 16x16 sprite: handle enters palm around pixel (4, 3.5)
+    return create3DVoxelItemGeometry(DIAMOND_PICKAXE_VOXELS, 4.0, 3.5, 0.38, 0.32);
+  }, []);
+
+  const isHolding = pose === 'holding';
+
+  return (
+    <group
+      position={isHolding ? [0, -0.2, 0.2] : [-0.1, -0.1, 0.1]}
+      rotation={isHolding ? [-0.45, 0.4, -0.65] : [-0.2, 0.1, 0.55]}
+    >
+      <mesh geometry={geom} castShadow receiveShadow>
+        <meshStandardMaterial
+          vertexColors
+          roughness={0.35}
+          metalness={0.25}
+          emissive="#0088AA"
+          emissiveIntensity={0.2}
+        />
+      </mesh>
+    </group>
+  );
+};
+
+const CustomSoulTorchHeld: React.FC<{ pose?: string }> = ({ pose = 'idle' }) => {
+  const lightRef = useRef<THREE.PointLight>(null);
+  const geom = useMemo(() => {
+    // 16x16 sprite: stick base gripped at pixel (7.5, 2.0)
+    return create3DVoxelItemGeometry(SOUL_TORCH_VOXELS, 7.5, 2.0, 0.38, 0.32);
+  }, []);
+
+  const isHolding = pose === 'holding';
+
+  useFrame((state) => {
+    const t = state.clock.getElapsedTime();
+    if (lightRef.current) {
+      const flicker = 1.0 + Math.sin(t * 13.5) * 0.08 + Math.sin(t * 21.3) * 0.05;
+      lightRef.current.intensity = 2.8 * flicker;
+    }
+  });
+
+  return (
+    <group
+      position={isHolding ? [0, -0.1, 0.3] : [0, -0.1, 0.2]}
+      rotation={isHolding ? [0.95, 0.1, -0.05] : [-0.35, 0.2, -0.1]}
+    >
+      <mesh geometry={geom} castShadow receiveShadow>
+        <meshStandardMaterial
+          vertexColors
+          roughness={0.7}
+          metalness={0.1}
+          emissive="#00E5FF"
+          emissiveIntensity={0.4}
+        />
+      </mesh>
+      <pointLight
+        ref={lightRef}
+        position={[0, 2.8, 0.3]}
+        color="#00E5FF"
+        intensity={2.8}
+        distance={14}
+        decay={2}
+      />
+    </group>
+  );
+};
+
+export const HeldItemMesh: React.FC<{ type: string; pose?: string }> = ({ type, pose = 'idle' }) => {
   switch (type) {
     case 'diamond-pickaxe':
-      return (
-        <group scale={0.7} rotation={[0, 0, -0.6]}>
-          {/* Stick */}
-          <mesh position={[0, 2, 0]}>
-            <boxGeometry args={[0.8, 10, 0.8]} />
-            <meshStandardMaterial color="#8B5A2B" roughness={0.9} />
-          </mesh>
-          {/* Diamond head */}
-          <mesh position={[0, 7.5, 0]}>
-            <boxGeometry args={[6.5, 1.2, 1.2]} />
-            <meshStandardMaterial color="#55FFFF" roughness={0.2} metalness={0.8} emissive="#22FFFF" emissiveIntensity={0.2} />
-          </mesh>
-        </group>
-      );
+      return <CustomDiamondPickaxeHeld pose={pose} />;
 
-    case 'torch':
-      return (
-        <group scale={0.8} rotation={[0.2, 0, 0]}>
-          {/* Wooden stick */}
-          <mesh position={[0, 2, 0]}>
-            <boxGeometry args={[1, 7, 1]} />
-            <meshStandardMaterial color="#7D5127" roughness={0.9} />
-          </mesh>
-          {/* Coal head */}
-          <mesh position={[0, 6, 0]}>
-            <boxGeometry args={[1.2, 1.5, 1.2]} />
-            <meshStandardMaterial color="#2B2B2B" roughness={0.9} />
-          </mesh>
-          {/* Flame */}
-          <mesh position={[0, 7.2, 0]}>
-            <boxGeometry args={[1.1, 1.1, 1.1]} />
-            <meshBasicMaterial color="#FF9900" />
-          </mesh>
-          <pointLight color="#FFAA33" intensity={2.5} distance={15} decay={2} position={[0, 7.5, 0]} />
-        </group>
-      );
-
+    case 'soul-torch':
     case 'soul-lantern':
-      return (
-        <group scale={0.65}>
-          {/* Metal frame */}
-          <mesh position={[0, 2, 0]}>
-            <boxGeometry args={[3.2, 4.5, 3.2]} />
-            <meshStandardMaterial color="#2A2A30" metalness={0.9} roughness={0.4} />
-          </mesh>
-          {/* Glowing soul core */}
-          <mesh position={[0, 2, 0]}>
-            <boxGeometry args={[2.2, 3.2, 2.2]} />
-            <meshBasicMaterial color="#00E5FF" />
-          </mesh>
-          <pointLight color="#00E5FF" intensity={3} distance={18} decay={2} position={[0, 2, 0]} />
-        </group>
-      );
+      return <CustomSoulTorchHeld pose={pose} />;
 
     case 'emerald':
-      return (
-        <mesh scale={0.7} rotation={[0.4, 0.4, 0]}>
-          <octahedronGeometry args={[2, 0]} />
-          <meshStandardMaterial color="#00FF66" roughness={0.1} metalness={0.9} emissive="#00DD44" emissiveIntensity={0.3} />
-        </mesh>
-      );
+      return <HeldSpriteItem type="emerald" />;
 
     case 'book':
       return (
@@ -453,12 +552,7 @@ export const HeldItemMesh: React.FC<{ type: string }> = ({ type }) => {
       );
 
     case 'ender-pearl':
-      return (
-        <mesh scale={0.7}>
-          <sphereGeometry args={[1.6, 12, 12]} />
-          <meshStandardMaterial color="#0B4D3C" roughness={0.2} metalness={0.8} emissive="#077A5B" emissiveIntensity={0.6} />
-        </mesh>
-      );
+      return <HeldSpriteItem type="ender-pearl" />;
 
     default:
       if (!type || type === 'none') return null;

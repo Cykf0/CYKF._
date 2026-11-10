@@ -10,13 +10,13 @@ export const EdgeArrows: React.FC = () => {
 
   const handlePrev = () => {
     if (isTransitioning || currentScene <= 0) return;
-    sounds.playHotbarTick();
+    sounds.playSceneTransition();
     prevScene();
   };
 
   const handleNext = () => {
     if (isTransitioning || currentScene >= 8) return;
-    sounds.playHotbarTick();
+    sounds.playSceneTransition();
     nextScene();
   };
 

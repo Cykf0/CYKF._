@@ -1,10 +1,73 @@
 import * as THREE from 'three';
+import { DEFAULT_SKIN_DATA_URI } from './defaultSkinData';
 
 export interface ProcessedSkinData {
   texture: THREE.CanvasTexture;
   isSlim: boolean;
   avatarUrl: string;
   isLegacy: boolean;
+}
+
+let defaultSkinDataInstance: ProcessedSkinData | null = null;
+
+/**
+ * Synchronous default skin provider to prevent any null/teal placeholder rendering.
+ */
+export function getDefaultSkinData(): ProcessedSkinData {
+  if (defaultSkinDataInstance) return defaultSkinDataInstance;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.magFilter = THREE.NearestFilter;
+  texture.minFilter = THREE.NearestFilter;
+  texture.generateMipmaps = false;
+  texture.colorSpace = THREE.SRGBColorSpace;
+
+  const img = new Image();
+  img.src = DEFAULT_SKIN_DATA_URI;
+
+  const renderSkinToCanvas = () => {
+    if (ctx && img.naturalWidth > 0) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0);
+      texture.needsUpdate = true;
+    }
+  };
+
+  if (img.complete && img.naturalWidth > 0) {
+    renderSkinToCanvas();
+  } else {
+    img.onload = renderSkinToCanvas;
+  }
+
+  // Pre-generate face avatar
+  let avatarUrl = DEFAULT_SKIN_DATA_URI;
+  try {
+    const avatarCanvas = document.createElement('canvas');
+    avatarCanvas.width = 64;
+    avatarCanvas.height = 64;
+    const actx = avatarCanvas.getContext('2d');
+    if (actx && img.complete && img.naturalWidth > 0) {
+      actx.imageSmoothingEnabled = false;
+      actx.drawImage(img, 8, 8, 8, 8, 0, 0, 64, 64);
+      actx.drawImage(img, 40, 8, 8, 8, 0, 0, 64, 64);
+      avatarUrl = avatarCanvas.toDataURL('image/png');
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  defaultSkinDataInstance = {
+    texture,
+    isSlim: false,
+    avatarUrl,
+    isLegacy: false,
+  };
+  return defaultSkinDataInstance;
 }
 
 /**
@@ -99,7 +162,9 @@ export async function loadAndProcessSkin(
 ): Promise<ProcessedSkinData> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      img.crossOrigin = 'anonymous';
+    }
 
     img.onload = () => {
       const isLegacy = img.height === 32;
@@ -180,7 +245,11 @@ export async function loadAndProcessSkin(
       });
     };
 
-    img.onerror = (e) => reject(e);
-    img.src = url;
+    img.onerror = (e) => {
+      // Fallback to embedded default skin
+      img.onerror = null;
+      img.src = DEFAULT_SKIN_DATA_URI;
+    };
+    img.src = (!url || url === '/skins/cykf.png') ? DEFAULT_SKIN_DATA_URI : url;
   });
 }

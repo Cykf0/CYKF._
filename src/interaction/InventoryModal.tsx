@@ -21,7 +21,8 @@ export const InventoryModal: React.FC = () => {
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === 'e' || (e.key === 'Escape' && isOpen)) {
-        sounds.playChestOpen();
+        if (isOpen) sounds.playInventoryClose();
+        else sounds.playInventoryOpen();
         toggleInventory();
       }
     };
@@ -38,7 +39,7 @@ export const InventoryModal: React.FC = () => {
       aria-label="Inventory"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-[2px] font-pixel select-none"
       onClick={() => {
-        sounds.playChestOpen();
+        sounds.playInventoryClose();
         setInventoryOpen(false);
       }}
     >
@@ -51,7 +52,7 @@ export const InventoryModal: React.FC = () => {
           <div className="text-sm font-bold tracking-wide">Crafting & Inventory</div>
           <button
             onClick={() => {
-              sounds.playChestOpen();
+              sounds.playInventoryClose();
               setInventoryOpen(false);
             }}
             className="text-xs text-[#222] hover:text-red-700 px-2 py-0.5 border border-[#555] bg-[#DDD]"
