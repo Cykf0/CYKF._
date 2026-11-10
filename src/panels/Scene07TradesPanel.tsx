@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { content } from '../content';
-import { EmeraldIcon } from '../hud/PixelIcons';
+import { EmeraldIcon, ItemIcon } from '../hud/PixelIcons';
 import { useStore } from '../store';
 import { sounds } from '../audio/soundManager';
 
@@ -58,6 +58,11 @@ export const Scene07TradesPanel: React.FC<{ onMakeOffer?: () => void }> = ({ onM
 
               {/* Arrow */}
               <span className="font-pixel text-xs text-gray-400">→</span>
+
+              {/* Trade Item Icon */}
+              <div className="w-8 h-8 bg-black/50 border border-white/20 flex items-center justify-center shrink-0 p-1">
+                <ItemIcon name={trade.icon} className="w-6 h-6" alt={trade.service} />
+              </div>
 
               {/* Service Info */}
               <div className="flex-1 min-w-0">

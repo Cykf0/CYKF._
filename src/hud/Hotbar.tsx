@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useStore, BIOMES } from '../store';
-import {
-  GrassBlockIcon,
-  EnchantedBookIcon,
-  ChestIcon,
-  CraftingTableIcon,
-  NetherStarIcon,
-  EmeraldIcon,
-  BookAndQuillIcon,
-  EnderEyeIcon
-} from './PixelIcons';
+import { ItemIcon } from './PixelIcons';
 import { sounds } from '../audio/soundManager';
 import { loadAndProcessSkin } from '../player/SkinTexture';
 import { content } from '../content';
@@ -82,23 +73,21 @@ export const Hotbar: React.FC = () => {
 
               {/* Slot Icon */}
               <div className="w-7 h-7 flex items-center justify-center pointer-events-none z-10">
-                {idx === 0 && <img src="/items/diamond_pickaxe.png" alt="Pickaxe" className="w-6 h-6 pixelated" />}
+                {idx === 0 && <ItemIcon name="diamond_pickaxe" alt="Pickaxe" className="w-6 h-6" />}
                 {idx === 1 && (
                   avatarUrl ? (
                     <img src={avatarUrl} alt="Cykf" className="w-6 h-6 pixelated rounded-[1px]" />
                   ) : (
-                    <div className="w-6 h-6 bg-[#ffeedd] border border-black flex items-center justify-center font-pixel text-[8px] text-black">
-                      C
-                    </div>
+                    <ItemIcon name="cherry_sapling" alt="Cherry Sapling" className="w-6 h-6" />
                   )
                 )}
-                {idx === 2 && <img src="/items/enchanted_book.png" alt="Book" className="w-6 h-6 pixelated" />}
-                {idx === 3 && <img src="/items/chest.png" alt="Chest" className="w-6 h-6 pixelated" />}
-                {idx === 4 && <img src="/items/crafting_table.png" alt="Crafting" className="w-6 h-6 pixelated" />}
-                {idx === 5 && <img src="/items/nether_star.png" alt="Star" className="w-6 h-6 pixelated" />}
-                {idx === 6 && <img src="/items/emerald.png" alt="Emerald" className="w-6 h-6 pixelated" />}
-                {idx === 7 && <img src="/items/writable_book.png" alt="Quill" className="w-6 h-6 pixelated" />}
-                {idx === 8 && <img src="/items/ender_eye.png" alt="Eye" className="w-6 h-6 pixelated" />}
+                {idx === 2 && <ItemIcon name="enchanted_book" alt="Book" className="w-6 h-6" />}
+                {idx === 3 && <ItemIcon name="chest" alt="Chest" className="w-6 h-6" />}
+                {idx === 4 && <ItemIcon name="crafting_table" alt="Crafting" className="w-6 h-6" />}
+                {idx === 5 && <ItemIcon name="nether_star" alt="Star" className="w-6 h-6" />}
+                {idx === 6 && <ItemIcon name="emerald" alt="Emerald" className="w-6 h-6" />}
+                {idx === 7 && <ItemIcon name="writable_book" alt="Quill" className="w-6 h-6" />}
+                {idx === 8 && <ItemIcon name="ender_eye" alt="Eye" className="w-6 h-6" />}
               </div>
 
               {/* Tooltip on hover (Vanilla dark purple-blue border, offset text shadow) */}
@@ -117,10 +106,10 @@ export const Hotbar: React.FC = () => {
             sounds.playChestOpen();
             toggleInventory();
           }}
-          className="ml-1 w-7 h-11 bg-[#2b2b2b] border border-[#555] hover:bg-[#444] text-[10px] font-pixel text-gray-300 flex items-center justify-center"
+          className="ml-1 w-7 h-11 bg-[#2b2b2b] border border-[#555] hover:bg-[#444] text-[10px] font-pixel text-gray-300 flex items-center justify-center p-0.5"
           title="Open Inventory [E]"
         >
-          🎒
+          <ItemIcon name="chest" alt="Inventory" className="w-5 h-5" />
         </button>
       </div>
 

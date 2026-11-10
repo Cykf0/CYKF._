@@ -63,7 +63,7 @@ export const Scene04ChestPanel: React.FC = () => {
                   <>
                     {/* Project Icon */}
                     <div className="pointer-events-none">
-                      <ItemIcon name={itemNames[idx % itemNames.length]} className="w-6 h-6" />
+                      <ItemIcon name={project.iconName || itemNames[idx % itemNames.length]} className="w-6 h-6" alt={project.title} />
                     </div>
                     {/* Rarity Corner Pip */}
                     <div

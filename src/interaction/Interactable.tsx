@@ -209,7 +209,7 @@ export const Interactable: React.FC<InteractableProps> = ({
     } else if (category === 'BLOCK') {
       // Right-click block placement
       const sound = (config.materialType || 'stone') as 'stone' | 'wood' | 'dirt';
-      interactionRegistry.spawnDrop('block', [
+      interactionRegistry.spawnDrop(config.dropItem || 'dirt', [
         groupRef.current?.position.x || 0,
         (groupRef.current?.position.y || 0) + 1,
         groupRef.current?.position.z || 0,

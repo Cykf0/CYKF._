@@ -7,6 +7,7 @@ import { content } from '../content';
 import { Interactable } from '../interaction/Interactable';
 import { sounds } from '../audio/soundManager';
 import { useStore } from '../store';
+import { getItemTexture3D } from '../utils/itemIcons';
 
 export interface PlayerModelProps {
   skinUrl?: string;
@@ -460,6 +461,25 @@ export const HeldItemMesh: React.FC<{ type: string }> = ({ type }) => {
       );
 
     default:
-      return null;
+      if (!type || type === 'none') return null;
+      return <HeldSpriteItem type={type} />;
   }
+};
+
+const HeldSpriteItem: React.FC<{ type: string }> = ({ type }) => {
+  const texture = useMemo(() => getItemTexture3D(type), [type]);
+  return (
+    <group scale={3.5} rotation={[0, 0, -0.4]}>
+      <mesh>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial
+          map={texture}
+          transparent={true}
+          alphaTest={0.5}
+          side={THREE.DoubleSide}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
+  );
 };

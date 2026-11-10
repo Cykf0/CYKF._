@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useStore } from '../store';
 import { sounds } from '../audio/soundManager';
 import { content } from '../content';
+import { ItemIcon } from '../hud/PixelIcons';
 
 // 27 authentic survival items for the 9x3 inventory grid
 const INVENTORY_ITEMS = [
@@ -74,7 +75,7 @@ export const InventoryModal: React.FC = () => {
                   className="w-8 h-8 bg-[#8B8B8B] border-2 border-t-[#373737] border-l-[#373737] border-b-[#FFF] border-r-[#FFF] flex items-center justify-center hover:bg-[#A5A5A5] cursor-pointer"
                   onClick={() => sounds.playItemPop()}
                 >
-                  <img src={`/items/${item}.png`} alt={item} className="w-6 h-6 pixelated" />
+                  <ItemIcon name={item} alt={item} className="w-6 h-6" />
                 </div>
               ))}
             </div>
@@ -87,7 +88,7 @@ export const InventoryModal: React.FC = () => {
               }}
               title="Craft Diamond Pickaxe"
             >
-              <img src="/items/diamond_pickaxe.png" alt="result" className="w-7 h-7 pixelated" />
+              <ItemIcon name="diamond_pickaxe" alt="result" className="w-7 h-7" />
             </div>
           </div>
         </div>
@@ -106,7 +107,7 @@ export const InventoryModal: React.FC = () => {
                 }}
                 title={item.replace('_', ' ')}
               >
-                <img src={`/items/${item}.png`} alt={item} className="w-6 h-6 pixelated" />
+                <ItemIcon name={item} alt={item} className="w-6 h-6" />
               </div>
             ))}
           </div>
@@ -130,7 +131,7 @@ export const InventoryModal: React.FC = () => {
                 }}
                 title={`Hotbar ${idx + 1}: ${item}`}
               >
-                <img src={`/items/${item}.png`} alt={item} className="w-6 h-6 pixelated" />
+                <ItemIcon name={item} alt={item} className="w-6 h-6" />
               </div>
             ))}
           </div>

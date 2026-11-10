@@ -1,6 +1,7 @@
 import React from 'react';
 import { ProjectItem } from '../content';
 import { sounds } from '../audio/soundManager';
+import { ItemIcon } from './PixelIcons';
 
 interface ProjectModalProps {
   project: ProjectItem | null;
@@ -13,16 +14,21 @@ export const ProjectModal: React.FC<ProjectModalProps> = ({ project, onClose }) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
       <div className="relative w-full max-w-lg mc-panel p-6 border-2 border-white/20 shadow-2xl">
-        {/* Header with Rarity */}
+        {/* Header with Rarity & Item Icon */}
         <div className="flex items-center justify-between pb-3 border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <span
-              className="w-3 h-3 rounded-full inline-block"
-              style={{ backgroundColor: project.rarityColor }}
-            />
-            <span className="font-pixel text-xs uppercase tracking-wider text-white">
-              {project.rarity} BUILD
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-black/60 border border-white/20 flex items-center justify-center p-1">
+              <ItemIcon name={project.iconName} className="w-6 h-6" alt={project.title} />
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className="w-3 h-3 rounded-full inline-block"
+                style={{ backgroundColor: project.rarityColor }}
+              />
+              <span className="font-pixel text-xs uppercase tracking-wider text-white">
+                {project.rarity} BUILD
+              </span>
+            </div>
           </div>
 
           <button

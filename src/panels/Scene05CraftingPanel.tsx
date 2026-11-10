@@ -74,6 +74,15 @@ export const Scene05CraftingPanel: React.FC = () => {
                 →
               </div>
 
+              {/* Crafted Result Slot */}
+              <div className="w-9 h-9 bg-[#2c2c30] border-2 border-white/20 flex items-center justify-center p-1 shrink-0">
+                <ItemIcon
+                  name={idx === 0 ? 'nether_star' : idx === 1 ? 'comparator' : 'diamond_pickaxe'}
+                  className="w-7 h-7"
+                  alt={item.title}
+                />
+              </div>
+
               {/* Result Details */}
               <div className="flex-1 min-w-0">
                 <div className="font-pixel text-[9px] text-[#70C5FF] tracking-wider uppercase">

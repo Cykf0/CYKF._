@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "skin": "node scripts/fetch-skin.mjs",
     "atlas": "node scripts/build-atlas.mjs",
+    "icons": "node scripts/fetch-item-icons.mjs",
     "audit:interactions": "node scripts/coverage-audit.mjs"
   },
   "dependencies": {
