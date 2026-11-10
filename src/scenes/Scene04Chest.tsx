@@ -185,11 +185,8 @@ export const Scene04Chest: React.FC = () => {
       </group>
 
       {/* ----------------------------------------------------------------------- */}
-      {/* 3. WOODEN MINESHAFT SUPPORT ARCHES & RAILWAY                            */}
+      {/* 3. WOODEN MINESHAFT SUPPORT ARCHES & RAILWAY (Tunnel Archways)           */}
       {/* ----------------------------------------------------------------------- */}
-      <group position={[-2.5, 0.0, 1.5]}>
-        <MineshaftSupportArch width={3.6} height={3.8} />
-      </group>
       <group position={[-2.5, 0.0, -2.5]}>
         <MineshaftSupportArch width={3.6} height={3.8} />
       </group>
@@ -198,9 +195,6 @@ export const Scene04Chest: React.FC = () => {
       </group>
 
       {/* Wall Torches on Support Beams */}
-      <group position={[-4.1, 2.3, 1.5]}>
-        <VoxelTorch position={[0, 0, 0]} />
-      </group>
       <group position={[-0.9, 2.3, -2.5]}>
         <VoxelTorch position={[0, 0, 0]} />
       </group>

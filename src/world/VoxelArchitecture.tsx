@@ -1827,48 +1827,86 @@ export const ObsidianPillarWithCrystal: React.FC<{
 /**
  * Central Bedrock Exit Portal Fountain (Scene 9)
  */
+/**
+ * Canonical Minecraft End Exit Portal Fountain (Scene 9)
+ * Built with authentic bedrock basin rim, central bedrock pillar, and horizontal shimmering cosmic End Portal fluid.
+ */
 export const EndExitPortalFountain: React.FC<{
   position?: [number, number, number];
 }> = ({ position = [0, 0, 0] }) => {
+  const portalMatRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  // Authentic Minecraft End Portal starry cosmic texture
+  const endPortalTex = useMemo(() => {
+    const loader = new THREE.TextureLoader();
+    const tex = loader.load('/texturepack/assets/minecraft/textures/entity/end_portal/end_portal.png');
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(2.5, 2.5);
+    tex.magFilter = THREE.NearestFilter;
+    tex.minFilter = THREE.NearestFilter;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, []);
+
+  useFrame((state) => {
+    if (portalMatRef.current && portalMatRef.current.map) {
+      const t = state.clock.getElapsedTime();
+      portalMatRef.current.map.offset.x = (t * 0.015) % 1;
+      portalMatRef.current.map.offset.y = (t * 0.01) % 1;
+    }
+  });
+
   return (
     <group position={position}>
-      {/* Octagonal Bedrock Basin Rim */}
+      {/* 1. Bedrock Basin Outer Rim (5.2m x 0.5m x 5.2m, flush on ground y=0.0) */}
       <mesh
-        position={[0, 0.4, 0]}
+        position={[0, 0.25, 0]}
         geometry={createVanillaBlockGeometry({
-          width: 5.6,
-          height: 0.8,
-          depth: 5.6,
+          width: 5.2,
+          height: 0.5,
+          depth: 5.2,
           textures: 'bedrock',
         })}
         material={vanillaAtlas.getSolidMaterial()}
         receiveShadow
       />
 
-      {/* Central Bedrock Pillar */}
+      {/* 2. Canonical Horizontal End Portal Plane (Lies completely flat inside bedrock basin at y=0.48) */}
+      <mesh position={[0, 0.48, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[4.2, 4.2]} />
+        <meshStandardMaterial
+          ref={portalMatRef}
+          map={endPortalTex}
+          roughness={0.2}
+          metalness={0.1}
+          emissive="#581C87"
+          emissiveIntensity={1.2}
+          emissiveMap={endPortalTex}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* 3. Central Bedrock Pillar (1.0m x 3.6m x 1.0m) */}
       <mesh
-        position={[0, 2.5, 0]}
+        position={[0, 2.1, 0]}
         geometry={createVanillaBlockGeometry({
-          width: 1.2,
-          height: 4.2,
-          depth: 1.2,
+          width: 1.0,
+          height: 3.6,
+          depth: 1.0,
           textures: 'bedrock',
         })}
         material={vanillaAtlas.getSolidMaterial()}
+        castShadow
+        receiveShadow
       />
 
-      {/* Black Starry Void Portal Pool */}
-      <mesh position={[0, 0.85, 0]}>
-        <planeGeometry args={[4.2, 4.2]} />
-        <meshBasicMaterial color="#000208" side={THREE.DoubleSide} />
+      {/* 4. Top Torch / Dragon Egg Mount on Pillar (y=4.0) */}
+      <mesh position={[0, 4.0, 0]}>
+        <boxGeometry args={[0.25, 0.45, 0.25]} />
+        <meshStandardMaterial color="#FFAA00" emissive="#FF8800" emissiveIntensity={2.0} />
       </mesh>
-
-      {/* 4 Torches on Bedrock Pillar */}
-      <mesh position={[0, 4.8, 0]}>
-        <boxGeometry args={[0.3, 0.6, 0.3]} />
-        <meshBasicMaterial color="#FFAA33" />
-      </mesh>
-      <pointLight position={[0, 5.0, 0]} color="#FFAA33" intensity={3.0} distance={10} />
+      <pointLight position={[0, 4.2, 0]} color="#FFAA33" intensity={2.8} distance={9} />
     </group>
   );
 };

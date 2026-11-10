@@ -11,9 +11,6 @@ import {
   VanillaLantern,
   VolumetricGodRay,
 } from '../world/VoxelStructures';
-import {
-  ArcaneEnchantingDais,
-} from '../world/VoxelArchitecture';
 import { Interactable } from '../interaction/Interactable';
 import { sounds } from '../audio/soundManager';
 import { useStore } from '../store';
@@ -239,6 +236,25 @@ export const Scene03Enchantments: React.FC = () => {
     });
   }, []);
 
+  // 4b. Authentic Obsidian & Purple Carpet Runic Floor Inlay (Flush at y=0.0)
+  const floorInlayGeo = useMemo(() => {
+    return createVanillaBlockGeometry({
+      width: 2.2,
+      height: 0.05,
+      depth: 2.2,
+      textures: 'obsidian',
+    });
+  }, []);
+
+  const carpetBorderGeo = useMemo(() => {
+    return createVanillaBlockGeometry({
+      width: 3.2,
+      height: 0.03,
+      depth: 3.2,
+      textures: 'purple_carpet',
+    });
+  }, []);
+
   return (
     <group>
       {/* ----------------------------------------------------------------------- */}
@@ -343,9 +359,11 @@ export const Scene03Enchantments: React.FC = () => {
       {/* 4. CENTRAL ENCHANTING SANCTUARY & STREAMING SGA RUNES                   */}
       {/* ----------------------------------------------------------------------- */}
       <group position={[0, 0, -0.5]}>
-        <ArcaneEnchantingDais position={[0, 0, 0]} />
+        {/* Decorative Obsidian & Purple Carpet Floor Inlay (Flush at floor level) */}
+        <mesh position={[0, 0.015, 0]} geometry={carpetBorderGeo} material={vanillaAtlas.getSolidMaterial()} receiveShadow />
+        <mesh position={[0, 0.025, 0]} geometry={floorInlayGeo} material={vanillaAtlas.getSolidMaterial()} receiveShadow />
 
-        {/* Interactive 3D Enchanting Table (Rests flush on dais altar top y=0.85) */}
+        {/* Interactive 3D Enchanting Table (Rests flush on floor at y=0.0) */}
         <Interactable
           id="scene03_enchanting_table"
           name="Arcane Enchanting Table (Tier 30)"
@@ -357,7 +375,7 @@ export const Scene03Enchantments: React.FC = () => {
             useStore.getState().recordDiscovery('scene03_enchanting_table', 'PROP', 'Enchantment Codex');
           }}
         >
-          <group position={[0, 0.85, 0]}>
+          <group position={[0, 0.0, 0]}>
             <EnchantingTable3D position={[0, 0, 0]} />
           </group>
         </Interactable>
@@ -375,7 +393,7 @@ export const Scene03Enchantments: React.FC = () => {
       </group>
 
       {/* ----------------------------------------------------------------------- */}
-      {/* 5. PLAYER MODEL: Cykf_ Studying the Glyphs (Flush on Floor y=0.0)       */}
+      {/* 5. PLAYER MODEL: Cykf_ Studying the Glyphs (Standing on Floor y=0.0)    */}
       {/* ----------------------------------------------------------------------- */}
       <React.Suspense fallback={null}>
         <Interactable
@@ -387,7 +405,7 @@ export const Scene03Enchantments: React.FC = () => {
             useStore.getState().recordDiscovery('scene03_player_cykf', 'PLAYER', 'Arcane Scholar');
           }}
         >
-          <group position={[1.5, 0.0, 0.8]} rotation={[0, -0.4, 0]}>
+          <group position={[1.5, 0.0, 0.2]} rotation={[0, -0.55, 0]}>
             <PlayerModel
               pose="idle"
               heldItem="enchanted-book"
