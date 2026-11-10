@@ -48,6 +48,17 @@ interface AppState {
   isMuted: boolean;
   quality: QualityLevel;
 
+  // Discovery & Rewards System
+  discoveries: Record<string, boolean>;
+  discoveredCount: number;
+  totalDiscoveries: number;
+  toastMessage: { title: string; desc: string; icon?: string } | null;
+
+  // Sandbox & Inventory
+  selectedHotbarSlot: number;
+  inventoryOpen: boolean;
+  worldResetKey: number;
+
   // Actions
   setScene: (index: number) => void;
   nextScene: () => void;
@@ -59,8 +70,33 @@ interface AppState {
   setQuality: (quality: QualityLevel) => void;
   addXp: (amount: number) => void;
   triggerHurt: () => void;
+  popHeart: () => void;
+  eatFood: () => void;
+  fastForwardTime: (hours?: number) => void;
   respawnToStart: () => void;
+
+  // Sandbox Actions
+  recordDiscovery: (id: string, category: string, label: string) => boolean;
+  setSelectedHotbarSlot: (slot: number) => void;
+  cycleHotbarSlot: (delta: number) => void;
+  toggleInventory: () => void;
+  setInventoryOpen: (open: boolean) => void;
+  resetWorld: () => void;
+  resetScene: () => void;
+  setToastMessage: (toast: { title: string; desc: string; icon?: string } | null) => void;
 }
+
+const loadSavedDiscoveries = (): Record<string, boolean> => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = localStorage.getItem('cykf_discoveries');
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const initialDiscoveries = loadSavedDiscoveries();
 
 export const useStore = create<AppState>((set, get) => ({
   currentScene: 0,
@@ -79,6 +115,15 @@ export const useStore = create<AppState>((set, get) => ({
 
   isMuted: typeof window !== 'undefined' ? localStorage.getItem('cykf_muted') === 'true' : false,
   quality: 'high',
+
+  discoveries: initialDiscoveries,
+  discoveredCount: Object.keys(initialDiscoveries).length,
+  totalDiscoveries: 100,
+  toastMessage: null,
+
+  selectedHotbarSlot: 0,
+  inventoryOpen: false,
+  worldResetKey: 0,
 
   setScene: (index: number) => {
     const clamped = Math.max(0, Math.min(8, index));
@@ -137,6 +182,31 @@ export const useStore = create<AppState>((set, get) => ({
     setTimeout(() => set({ isHurt: false, hearts: 10 }), 600);
   },
 
+  popHeart: () => {
+    set(state => {
+      const nextHearts = state.hearts > 1 ? state.hearts - 1 : 10;
+      return { hearts: nextHearts, isHurt: true };
+    });
+    setTimeout(() => set({ isHurt: false }), 400);
+  },
+
+  eatFood: () => {
+    set(state => {
+      const nextHunger = state.hunger > 1 ? state.hunger - 1 : 10;
+      return { hunger: nextHunger };
+    });
+  },
+
+  fastForwardTime: (hours: number = 2) => {
+    set(state => {
+      const parts = state.inGameTime.split(':');
+      let hr = (parseInt(parts[0], 10) + hours) % 24;
+      const min = parts[1] || '00';
+      const formatted = `${hr.toString().padStart(2, '0')}:${min}`;
+      return { inGameTime: formatted };
+    });
+  },
+
   respawnToStart: () => {
     const biome = BIOMES[0];
     if (typeof window !== 'undefined') {
@@ -152,5 +222,83 @@ export const useStore = create<AppState>((set, get) => ({
       hunger: 10,
       frontCameraView: false
     });
+  },
+
+  recordDiscovery: (id: string, category: string, label: string) => {
+    const { discoveries, addXp, setToastMessage } = get();
+    if (discoveries[id]) return false;
+
+    const next = { ...discoveries, [id]: true };
+    const nextCount = Object.keys(next).length;
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('cykf_discoveries', JSON.stringify(next));
+      } catch {}
+    }
+
+    set({
+      discoveries: next,
+      discoveredCount: nextCount
+    });
+
+    // Award XP
+    addXp(1);
+
+    // Milestones check: 10, 25, 50, 100
+    if (nextCount === 10 || nextCount === 25 || nextCount === 50 || nextCount === 100) {
+      setToastMessage({
+        title: `Advancement Made! (${nextCount}/100)`,
+        desc: `Master Explorer: Discovered ${label}!`,
+        icon: 'diamond'
+      });
+      setTimeout(() => {
+        set({ toastMessage: null });
+      }, 4500);
+    }
+
+    return true;
+  },
+
+  setSelectedHotbarSlot: (slot: number) => {
+    set({ selectedHotbarSlot: Math.max(0, Math.min(8, slot)) });
+  },
+
+  cycleHotbarSlot: (delta: number) => {
+    set(state => ({
+      selectedHotbarSlot: (state.selectedHotbarSlot + delta + 9) % 9
+    }));
+  },
+
+  toggleInventory: () => {
+    set(state => ({ inventoryOpen: !state.inventoryOpen }));
+  },
+
+  setInventoryOpen: (open: boolean) => {
+    set({ inventoryOpen: open });
+  },
+
+  resetWorld: () => {
+    set(state => ({
+      worldResetKey: state.worldResetKey + 1,
+      toastMessage: {
+        title: 'World Reset',
+        desc: 'All blocks, props, and flora have been restored to natural state.',
+        icon: 'compass'
+      }
+    }));
+    setTimeout(() => {
+      set({ toastMessage: null });
+    }, 3000);
+  },
+
+  resetScene: () => {
+    set(state => ({
+      worldResetKey: state.worldResetKey + 1
+    }));
+  },
+
+  setToastMessage: (toast) => {
+    set({ toastMessage: toast });
   }
 }));

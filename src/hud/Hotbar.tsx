@@ -17,6 +17,9 @@ import { content } from '../content';
 export const Hotbar: React.FC = () => {
   const currentScene = useStore((s) => s.currentScene);
   const setScene = useStore((s) => s.setScene);
+  const selectedSlot = useStore((s) => s.selectedHotbarSlot);
+  const setSelectedSlot = useStore((s) => s.setSelectedHotbarSlot);
+  const toggleInventory = useStore((s) => s.toggleInventory);
   const isTransitioning = useStore((s) => s.isTransitioning);
 
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -29,21 +32,24 @@ export const Hotbar: React.FC = () => {
   }, []);
 
   const handleSelect = (idx: number) => {
-    if (idx === currentScene || isTransitioning) return;
     sounds.playHotbarTick();
-    setScene(idx);
+    setSelectedSlot(idx);
+    if (idx !== currentScene && !isTransitioning) {
+      setScene(idx);
+    }
+    useStore.getState().recordDiscovery(`hotbar_slot_${idx}`, 'UI', `Hotbar Slot ${idx + 1}`);
   };
 
   const slotTooltips = [
-    '1: Village Sunrise',
-    '2: Player Profile',
-    '3: Enchantments',
-    '4: Completed Builds',
-    '5: The Journey',
-    '6: Advancements',
-    '7: Villager Trades',
-    '8: Let\'s Connect',
-    '9: The End'
+    '1: Diamond Pickaxe [Mines 3x Fast]',
+    '2: Cherry Sapling / Saksham Profile',
+    '3: Enchanted Book [Sharpness V]',
+    '4: Treasure Chest [Project Vault]',
+    '5: Crafting Table [Recipe Grid]',
+    '6: Nether Star / Advancements',
+    '7: Emerald [Villager Trading]',
+    '8: Book & Quill [Let\'s Connect]',
+    '9: Eye of Ender [The End Portal]'
   ];
 
   return (
@@ -51,10 +57,10 @@ export const Hotbar: React.FC = () => {
       {/* 9-Slot Hotbar Frame */}
       <div className="relative flex items-center bg-[#8f8f8f]/80 p-[2px] border-2 border-t-[#c6c6c6] border-l-[#c6c6c6] border-b-[#373737] border-r-[#373737] shadow-2xl">
         {BIOMES.map((biome, idx) => {
-          const isSelected = currentScene === idx;
+          const isSelected = selectedSlot === idx;
 
           return (
-            <div
+            <button
               key={biome.id}
               onClick={() => handleSelect(idx)}
               onMouseEnter={() => setHoveredSlot(idx)}
@@ -64,6 +70,7 @@ export const Hotbar: React.FC = () => {
                   ? 'scale-[1.08] z-20 border-[3px] border-white bg-black/60 shadow-lg'
                   : 'bg-[#2b2b2b]/90 border border-[#3b3b3b] hover:bg-[#3d3d3d]'
               }`}
+              title={slotTooltips[idx]}
             >
               {/* Corner Slot Number */}
               <span className="absolute top-[2px] left-[3px] font-pixel text-[8px] text-[#AAAAAA] leading-none pointer-events-none">
@@ -72,7 +79,7 @@ export const Hotbar: React.FC = () => {
 
               {/* Slot Icon */}
               <div className="w-7 h-7 flex items-center justify-center pointer-events-none">
-                {idx === 0 && <GrassBlockIcon className="w-6 h-6" />}
+                {idx === 0 && <img src="/items/diamond_pickaxe.png" alt="Pickaxe" className="w-6 h-6 pixelated" />}
                 {idx === 1 && (
                   avatarUrl ? (
                     <img src={avatarUrl} alt="Cykf" className="w-6 h-6 pixelated rounded-[1px]" />
@@ -82,13 +89,13 @@ export const Hotbar: React.FC = () => {
                     </div>
                   )
                 )}
-                {idx === 2 && <EnchantedBookIcon className="w-6 h-6" />}
-                {idx === 3 && <ChestIcon className="w-6 h-6" />}
-                {idx === 4 && <CraftingTableIcon className="w-6 h-6" />}
-                {idx === 5 && <NetherStarIcon className="w-6 h-6" />}
-                {idx === 6 && <EmeraldIcon className="w-6 h-6" />}
-                {idx === 7 && <BookAndQuillIcon className="w-6 h-6" />}
-                {idx === 8 && <EnderEyeIcon className="w-6 h-6" />}
+                {idx === 2 && <img src="/items/enchanted_book.png" alt="Book" className="w-6 h-6 pixelated" />}
+                {idx === 3 && <img src="/items/chest.png" alt="Chest" className="w-6 h-6 pixelated" />}
+                {idx === 4 && <img src="/items/crafting_table.png" alt="Crafting" className="w-6 h-6 pixelated" />}
+                {idx === 5 && <img src="/items/nether_star.png" alt="Star" className="w-6 h-6 pixelated" />}
+                {idx === 6 && <img src="/items/emerald.png" alt="Emerald" className="w-6 h-6 pixelated" />}
+                {idx === 7 && <img src="/items/writable_book.png" alt="Quill" className="w-6 h-6 pixelated" />}
+                {idx === 8 && <img src="/items/ender_eye.png" alt="Eye" className="w-6 h-6 pixelated" />}
               </div>
 
               {/* Tooltip on hover */}
@@ -97,9 +104,21 @@ export const Hotbar: React.FC = () => {
                   {slotTooltips[idx]}
                 </div>
               )}
-            </div>
+            </button>
           );
         })}
+
+        {/* Inventory button toggle at right */}
+        <button
+          onClick={() => {
+            sounds.playChestOpen();
+            toggleInventory();
+          }}
+          className="ml-1 w-7 h-11 bg-[#2b2b2b] border border-[#555] hover:bg-[#444] text-[10px] font-pixel text-gray-300 flex items-center justify-center"
+          title="Open Inventory [E]"
+        >
+          🎒
+        </button>
       </div>
 
       {/* Pagination Dots (9 dots) */}
@@ -119,8 +138,16 @@ export const Hotbar: React.FC = () => {
       </div>
 
       {/* Key hint line */}
-      <div className="font-pixel text-[8px] text-white/50 tracking-wider">
-        [1-9] Biome | [A/D] Move | [F] Front Cam | [M] Sound
+      <div className="font-pixel text-[8px] text-white/60 tracking-wider flex items-center gap-2">
+        <span>[1-9] Tools</span>
+        <span>·</span>
+        <span>[E] Inventory</span>
+        <span>·</span>
+        <span>[R] Reset</span>
+        <span>·</span>
+        <span>[A/D] Biomes</span>
+        <span>·</span>
+        <span>[M] Mute</span>
       </div>
     </div>
   );

@@ -9,6 +9,9 @@ import {
   CharacterContactShadow,
   DustMotes,
 } from '../world/EnvironmentEffects';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 export const Scene09End: React.FC = () => {
   const voidRef = useRef<THREE.Points>(null);
@@ -33,7 +36,6 @@ export const Scene09End: React.FC = () => {
       const pos = voidRef.current.geometry.attributes.position.array as Float32Array;
       for (let i = 0; i < 80; i++) {
         pos[i * 3 + 1] += speeds[i];
-        // Swirling vortex movement
         pos[i * 3]     += Math.sin(t * 1.5 + i) * 0.008;
         pos[i * 3 + 2] += Math.cos(t * 1.5 + i) * 0.008;
 
@@ -62,28 +64,47 @@ export const Scene09End: React.FC = () => {
       <fog attach="fog" args={['#080214', 6, 26]} />
 
       {/* 2. Swirling Purple Void Particles */}
-      <points ref={voidRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
+      <Interactable
+        id="scene09_void_particles"
+        name="Cosmic Void Swirls"
+        category="PARTICLE"
+        onClick={() => {
+          sounds.playParticleBurst();
+          useStore.getState().recordDiscovery('scene09_void_particles', 'PARTICLE', 'Catch Cosmic Void Particle');
+        }}
+      >
+        <points ref={voidRef}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              args={[positions, 3]}
+            />
+          </bufferGeometry>
+          <pointsMaterial
+            size={0.12}
+            color="#D8B4FE"
+            transparent
+            opacity={0.85}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
           />
-        </bufferGeometry>
-        <pointsMaterial
-          size={0.12}
-          color="#D8B4FE"
-          transparent
-          opacity={0.85}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </points>
+        </points>
+      </Interactable>
 
       {/* 3. Main End Stone Island with PBR Normals */}
-      <mesh position={[0, -0.6, 0]} receiveShadow>
-        <cylinderGeometry args={[8, 6, 1.4, 16]} />
-        <primitive object={blockMaterials.endStone} attach="material" />
-      </mesh>
+      <Interactable
+        id="scene09_end_island"
+        name="Central End Stone Island"
+        category="BLOCK"
+        materialType="stone"
+        hardness={500}
+        dropItem="end_stone"
+      >
+        <mesh position={[0, -0.6, 0]} receiveShadow>
+          <cylinderGeometry args={[8, 6, 1.4, 16]} />
+          <primitive object={blockMaterials.endStone} attach="material" />
+        </mesh>
+      </Interactable>
 
       {/* Floating Distant End Stone Asteroid Islands */}
       {[
@@ -91,41 +112,86 @@ export const Scene09End: React.FC = () => {
         [9, -1, -11, 4.2],
         [-10, -2, 5, 3.2],
       ].map(([ix, iy, iz, irad], idx) => (
-        <mesh key={idx} position={[ix, iy, iz]}>
-          <coneGeometry args={[irad, 4.0, 8]} />
-          <primitive object={blockMaterials.endStone} attach="material" />
-        </mesh>
+        <Interactable
+          key={idx}
+          id={`scene09_asteroid_${idx}`}
+          name="Floating Void Asteroid"
+          category="STRUCTURE"
+          materialType="stone"
+          position={[ix, iy, iz]}
+        >
+          <mesh>
+            <coneGeometry args={[irad, 4.0, 8]} />
+            <primitive object={blockMaterials.endStone} attach="material" />
+          </mesh>
+        </Interactable>
       ))}
 
       {/* 4. Towering Obsidian Pillars with End Crystals and Blinding Beams */}
       <group position={[3.8, 0, -3]}>
-        <mesh position={[0, 4.5, 0]} castShadow receiveShadow>
-          <boxGeometry args={[1.8, 9, 1.8]} />
-          <primitive object={blockMaterials.obsidian} attach="material" />
-        </mesh>
+        <Interactable
+          id="scene09_obsidian_pillar_right"
+          name="Towering Obsidian Monolith"
+          category="BLOCK"
+          materialType="stone"
+          hardness={1000}
+          dropItem="obsidian"
+        >
+          <mesh position={[0, 4.5, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.8, 9, 1.8]} />
+            <primitive object={blockMaterials.obsidian} attach="material" />
+          </mesh>
+        </Interactable>
         <EndCrystal3D position={[0, 9, 0]} />
         <pointLight position={[0, 9.2, 0]} color="#C084FC" intensity={3.5} distance={12} />
       </group>
 
       <group position={[-4.5, 0, -4]}>
-        <mesh position={[0, 3.5, 0]} castShadow receiveShadow>
-          <boxGeometry args={[1.6, 7, 1.6]} />
-          <primitive object={blockMaterials.obsidian} attach="material" />
-        </mesh>
+        <Interactable
+          id="scene09_obsidian_pillar_left"
+          name="Ancient Obsidian Pillar"
+          category="BLOCK"
+          materialType="stone"
+          hardness={1000}
+          dropItem="obsidian"
+        >
+          <mesh position={[0, 3.5, 0]} castShadow receiveShadow>
+            <boxGeometry args={[1.6, 7, 1.6]} />
+            <primitive object={blockMaterials.obsidian} attach="material" />
+          </mesh>
+        </Interactable>
         <EndCrystal3D position={[0, 7, 0]} />
         <pointLight position={[0, 7.2, 0]} color="#C084FC" intensity={3.5} distance={12} />
       </group>
 
       {/* 5. Activated End Portal Ring with Cosmic Star Center */}
       <group position={[1.8, 0.05, 1.2]} rotation={[-0.1, -0.4, 0]}>
-        <mesh receiveShadow>
-          <ringGeometry args={[1.2, 2.0, 16]} />
-          <meshStandardMaterial color="#0A3C2F" roughness={0.6} />
-        </mesh>
-        <mesh position={[0, 0, -0.02]}>
-          <circleGeometry args={[1.2, 16]} />
-          <meshBasicMaterial color="#010609" />
-        </mesh>
+        <Interactable
+          id="scene09_end_portal_frame"
+          name="End Portal Frame"
+          category="STRUCTURE"
+          materialType="stone"
+        >
+          <mesh receiveShadow>
+            <ringGeometry args={[1.2, 2.0, 16]} />
+            <meshStandardMaterial color="#0A3C2F" roughness={0.6} />
+          </mesh>
+        </Interactable>
+
+        <Interactable
+          id="scene09_portal_horizon"
+          name="End Void Gateway"
+          category="PROP"
+          onClick={() => {
+            sounds.playPortalWarp();
+            useStore.getState().recordDiscovery('scene09_portal_warp', 'PROP', 'Enter End Gateway');
+          }}
+        >
+          <mesh position={[0, 0, -0.02]}>
+            <circleGeometry args={[1.2, 16]} />
+            <meshBasicMaterial color="#010609" />
+          </mesh>
+        </Interactable>
         <pointLight color="#00FFCC" intensity={2.5} distance={6} />
       </group>
 

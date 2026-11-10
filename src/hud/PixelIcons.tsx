@@ -94,11 +94,20 @@ export const HeartIcon: React.FC<{ filled?: boolean; className?: string }> = ({
 /**
  * Pixelated Minecraft Hunger Drumstick
  */
-export const HungerIcon: React.FC<{ className?: string }> = ({ className = "w-3 h-3" }) => (
+export const HungerIcon: React.FC<{ filled?: boolean; className?: string }> = ({
+  filled = true,
+  className = "w-3 h-3"
+}) => (
   <svg viewBox="0 0 9 9" className={`${className} pixelated`} fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M4 1h3v1h-3zM3 2h5v3h-5zM4 5h3v1h-3zM2 6h2v2h-2zM1 7h1v2h-1z" fill="#1A1108" />
-    <path d="M4 2h3v1h-3zM3 3h4v1h-4zM4 4h3v1h-3z" fill="#A86538" />
-    <rect x="5" y="2" width="1" height="1" fill="#DDB088" />
-    <rect x="2" y="7" width="1" height="1" fill="#EAEAEA" />
+    {filled ? (
+      <>
+        <path d="M4 1h3v1h-3zM3 2h5v3h-5zM4 5h3v1h-3zM2 6h2v2h-2zM1 7h1v2h-1z" fill="#1A1108" />
+        <path d="M4 2h3v1h-3zM3 3h4v1h-4zM4 4h3v1h-3z" fill="#A86538" />
+        <rect x="5" y="2" width="1" height="1" fill="#DDB088" />
+        <rect x="2" y="7" width="1" height="1" fill="#EAEAEA" />
+      </>
+    ) : (
+      <path d="M4 1h3v1h-3zM3 2h5v3h-5zM4 5h3v1h-3zM2 6h2v2h-2zM1 7h1v2h-1z" fill="#332211" />
+    )}
   </svg>
 );

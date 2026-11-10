@@ -10,27 +10,56 @@ export const StatusBars: React.FC = () => {
   const xpProgress = useStore((s) => s.xpProgress);
   const isHurt = useStore((s) => s.isHurt);
   const addXp = useStore((s) => s.addXp);
+  const popHeart = useStore((s) => s.popHeart);
+  const eatFood = useStore((s) => s.eatFood);
+
+  const handleHeartClick = (i: number) => {
+    sounds.playBlockHit('wood');
+    popHeart();
+    useStore.getState().recordDiscovery(`ui_heart_${i}`, 'UI', `Heart ${i + 1} Pop`);
+  };
+
+  const handleHungerClick = (i: number) => {
+    sounds.playEat();
+    eatFood();
+    useStore.getState().recordDiscovery(`ui_hunger_${i}`, 'UI', `Hunger Drumstick ${i + 1}`);
+  };
 
   const handleXpClick = () => {
     sounds.playXpOrb();
     addXp(1);
+    useStore.getState().recordDiscovery('ui_xp_bar', 'UI', 'Experience Bar Level Up');
   };
 
   return (
     <div className="flex flex-col items-center gap-1 select-none pointer-events-auto">
       {/* Hearts & Hunger Row */}
       <div className="w-[382px] flex items-center justify-between px-1">
-        {/* 10 Hearts (Left) */}
+        {/* 10 Interactive Hearts (Left) */}
         <div className={`flex items-center gap-1 transition-all ${isHurt ? 'brightness-200 scale-105' : ''}`}>
           {Array.from({ length: 10 }).map((_, i) => (
-            <HeartIcon key={i} filled={i < hearts} className="w-3 h-3" />
+            <button
+              key={i}
+              onClick={() => handleHeartClick(i)}
+              className="cursor-pointer hover:scale-125 transition-transform"
+              title={`Heart ${i + 1} (Click to pop!)`}
+            >
+              <HeartIcon filled={i < hearts} className="w-3.5 h-3.5" />
+            </button>
           ))}
         </div>
 
-        {/* 10 Hunger Drumsticks (Right) */}
+        {/* 10 Interactive Hunger Drumsticks (Right) */}
         <div className="flex items-center gap-1">
           {Array.from({ length: 10 }).map((_, i) => (
-            <HungerIcon key={i} className="w-3 h-3" />
+            <button
+              key={i}
+              onClick={() => handleHungerClick(i)}
+              className="cursor-pointer hover:scale-125 transition-transform"
+              title={`Hunger ${i + 1} (Click to eat!)`}
+            >
+              <HungerIcon filled={i < hunger} className="w-3.5 h-3.5" />
+            </button>
           ))}
         </div>
       </div>
@@ -38,11 +67,11 @@ export const StatusBars: React.FC = () => {
       {/* Experience Bar & Level Number */}
       <div
         onClick={handleXpClick}
-        title="Click for XP Orb!"
+        title="Experience Bar (Click to gain XP!)"
         className="relative w-[382px] cursor-pointer group flex flex-col items-center"
       >
         {/* Level Number */}
-        <div className="font-pixel text-[11px] text-[#80FF20] font-bold mb-0.5 tracking-wider drop-shadow-[0_2px_0_#000000] [text-shadow:1px_1px_0_#000,-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000]">
+        <div className="font-pixel text-[11px] text-[#80FF20] font-bold mb-0.5 tracking-wider drop-shadow-[0_2px_0_#000000] [text-shadow:1px_1px_0_#000,-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000] group-hover:scale-110 transition-transform">
           {xpLevel}
         </div>
 

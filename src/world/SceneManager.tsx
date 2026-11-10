@@ -14,6 +14,8 @@ import { Scene06Advancements } from '../scenes/Scene06Advancements';
 import { Scene07Trades } from '../scenes/Scene07Trades';
 import { Scene08Connect } from '../scenes/Scene08Connect';
 import { Scene09End } from '../scenes/Scene09End';
+import { SceneInteractablesManager } from '../interaction/SceneInteractablesManager';
+import { BackgroundHorizon } from './BackgroundHorizon';
 
 // Per-scene camera configurations
 const CAMERA_PRESETS: { pos: [number, number, number]; target: [number, number, number]; fov: number }[] = [
@@ -46,8 +48,18 @@ export const SceneManager: React.FC = () => {
   const toggleFrontCamera = useStore((s) => s.toggleFrontCamera);
   const toggleMute = useStore((s) => s.toggleMute);
 
-  const { camera } = useThree();
+  const { camera, scene, gl } = useThree();
   const currentTarget = useRef(new THREE.Vector3(0, 1.2, 0));
+
+  // Expose globals for automated CDP interaction & coverage audits
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__THREE_SCENE__ = scene;
+      (window as any).__THREE_CAMERA__ = camera;
+      (window as any).__THREE_GL__ = gl;
+      (window as any).__USE_STORE__ = useStore;
+    }
+  }, [camera, scene, gl]);
 
   // Sync with browser hash routing
   useEffect(() => {
@@ -100,6 +112,18 @@ export const SceneManager: React.FC = () => {
       // 'M' key toggles mute
       if (e.key.toLowerCase() === 'm') {
         toggleMute();
+      }
+
+      // 'R' key resets world/scene
+      if (e.key.toLowerCase() === 'r') {
+        sounds.playBlockBreak('stone');
+        useStore.getState().resetWorld();
+      }
+
+      // 'E' key toggles inventory
+      if (e.key.toLowerCase() === 'e') {
+        sounds.playChestOpen();
+        useStore.getState().toggleInventory();
       }
     };
 
@@ -176,16 +200,20 @@ export const SceneManager: React.FC = () => {
   });
 
   return (
-    <group key={currentScene}>
-      {currentScene === 0 && <Scene01Title />}
-      {currentScene === 1 && <Scene02Profile />}
-      {currentScene === 2 && <Scene03Enchantments />}
-      {currentScene === 3 && <Scene04Chest />}
-      {currentScene === 4 && <Scene05Crafting />}
-      {currentScene === 5 && <Scene06Advancements />}
-      {currentScene === 6 && <Scene07Trades />}
-      {currentScene === 7 && <Scene08Connect />}
-      {currentScene === 8 && <Scene09End />}
-    </group>
+    <>
+      <BackgroundHorizon />
+      <SceneInteractablesManager />
+      <group key={currentScene}>
+        {currentScene === 0 && <Scene01Title />}
+        {currentScene === 1 && <Scene02Profile />}
+        {currentScene === 2 && <Scene03Enchantments />}
+        {currentScene === 3 && <Scene04Chest />}
+        {currentScene === 4 && <Scene05Crafting />}
+        {currentScene === 5 && <Scene06Advancements />}
+        {currentScene === 6 && <Scene07Trades />}
+        {currentScene === 7 && <Scene08Connect />}
+        {currentScene === 8 && <Scene09End />}
+      </group>
+    </>
   );
 };

@@ -8,6 +8,9 @@ import {
   CharacterContactShadow,
   DriftingVoxelClouds,
 } from '../world/EnvironmentEffects';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 export const Scene05Crafting: React.FC = () => {
   const snowRef = useRef<THREE.Points>(null);
@@ -77,48 +80,90 @@ export const Scene05Crafting: React.FC = () => {
       <DriftingVoxelClouds altitude={12} speed={0.2} color="#E8F2FA" />
 
       {/* 2. Snow Covered Cliff Ledge */}
-      <mesh position={[0, -0.5, 0]} receiveShadow>
-        <boxGeometry args={[22, 1, 22]} />
-        <meshStandardMaterial
-          color="#F2F7FA"
-          roughness={0.75}
-          metalness={0.05}
-        />
-      </mesh>
+      <Interactable
+        id="scene05_cliff_snow"
+        name="Alpine Powder Snow"
+        category="BLOCK"
+        materialType="snow"
+        hardness={250}
+        dropItem="snowball"
+      >
+        <mesh position={[0, -0.5, 0]} receiveShadow>
+          <boxGeometry args={[22, 1, 22]} />
+          <meshStandardMaterial
+            color="#F2F7FA"
+            roughness={0.75}
+            metalness={0.05}
+          />
+        </mesh>
+      </Interactable>
 
       {/* Distant Mountain Peaks Silhouette */}
       <group position={[0, -2, -12]}>
         {[-8, -3, 2, 7].map((mx, idx) => (
-          <mesh key={idx} position={[mx, 4 + idx * 0.5, 0]} castShadow>
-            <coneGeometry args={[4.5, 9, 4]} />
-            <meshStandardMaterial color="#7D98AE" roughness={0.9} />
-          </mesh>
+          <Interactable
+            key={idx}
+            id={`scene05_peak_${idx}`}
+            name="Snowy Mountain Ridge"
+            category="STRUCTURE"
+            materialType="stone"
+            position={[mx, 4 + idx * 0.5, 0]}
+          >
+            <mesh castShadow>
+              <coneGeometry args={[4.5, 9, 4]} />
+              <meshStandardMaterial color="#7D98AE" roughness={0.9} />
+            </mesh>
+          </Interactable>
         ))}
         {/* Snow Peak Caps */}
         {[-8, -3, 2, 7].map((mx, idx) => (
-          <mesh key={idx} position={[mx, 7.5 + idx * 0.5, 0]}>
-            <coneGeometry args={[2.0, 3.5, 4]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.6} />
-          </mesh>
+          <Interactable
+            key={`cap_${idx}`}
+            id={`scene05_peak_cap_${idx}`}
+            name="Glacier Ice Cap"
+            category="BLOCK"
+            materialType="snow"
+            position={[mx, 7.5 + idx * 0.5, 0]}
+          >
+            <mesh>
+              <coneGeometry args={[2.0, 3.5, 4]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.6} />
+            </mesh>
+          </Interactable>
         ))}
       </group>
 
       {/* Pine Trees with Snowy Boughs */}
       {[-4.2, 4.0].map((tx, idx) => (
         <group key={idx} position={[tx, 0, -2.5]}>
-          <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
-            <cylinderGeometry args={[0.2, 0.2, 2.4, 6]} />
-            <meshStandardMaterial color="#3A220F" roughness={0.9} />
-          </mesh>
-          <mesh position={[0, 3.2, 0]} castShadow receiveShadow>
-            <coneGeometry args={[1.6, 3.4, 6]} />
-            <meshStandardMaterial color="#1E3E26" roughness={0.8} />
-          </mesh>
-          {/* Snow Layer on Tree */}
-          <mesh position={[0, 3.4, 0]} castShadow>
-            <coneGeometry args={[1.7, 1.8, 6]} />
-            <meshStandardMaterial color="#FFFFFF" roughness={0.7} />
-          </mesh>
+          <Interactable
+            id={`scene05_pine_trunk_${idx}`}
+            name="Spruce Pine Trunk"
+            category="BLOCK"
+            materialType="wood"
+            hardness={450}
+          >
+            <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.2, 0.2, 2.4, 6]} />
+              <meshStandardMaterial color="#3A220F" roughness={0.9} />
+            </mesh>
+          </Interactable>
+
+          <Interactable
+            id={`scene05_pine_boughs_${idx}`}
+            name="Snowy Spruce Needles"
+            category="PLANT"
+            position={[0, 3.2, 0]}
+          >
+            <mesh castShadow receiveShadow>
+              <coneGeometry args={[1.6, 3.4, 6]} />
+              <meshStandardMaterial color="#1E3E26" roughness={0.8} />
+            </mesh>
+            <mesh position={[0, 0.2, 0]} castShadow>
+              <coneGeometry args={[1.7, 1.8, 6]} />
+              <meshStandardMaterial color="#FFFFFF" roughness={0.7} />
+            </mesh>
+          </Interactable>
           <CharacterContactShadow position={[0, 0.01, 0]} opacity={0.6} scale={2.2} />
         </group>
       ))}
@@ -137,15 +182,25 @@ export const Scene05Crafting: React.FC = () => {
       </group>
 
       {/* 4. Drifting Snow Particles */}
-      <points ref={snowRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
-          />
-        </bufferGeometry>
-        <pointsMaterial size={0.12} color="#FFFFFF" transparent opacity={0.9} />
-      </points>
+      <Interactable
+        id="scene05_drifting_snow"
+        name="Alpine Snowflakes"
+        category="PARTICLE"
+        onClick={() => {
+          sounds.playParticleBurst();
+          useStore.getState().recordDiscovery('scene05_drifting_snow', 'PARTICLE', 'Catch Snowflake');
+        }}
+      >
+        <points ref={snowRef}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              args={[positions, 3]}
+            />
+          </bufferGeometry>
+          <pointsMaterial size={0.12} color="#FFFFFF" transparent opacity={0.9} />
+        </points>
+      </Interactable>
 
       {/* 5. Saksham Player Resting near Campfire on Mountain Peak */}
       <React.Suspense fallback={null}>

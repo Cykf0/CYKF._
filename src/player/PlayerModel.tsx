@@ -4,6 +4,9 @@ import { useFrame } from '@react-three/fiber';
 import { createMinecraftBoxGeometry, loadAndProcessSkin, ProcessedSkinData } from './SkinTexture';
 import { Nametag } from './Nametag';
 import { content } from '../content';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 export interface PlayerModelProps {
   skinUrl?: string;
@@ -35,6 +38,14 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
   const leftLegPivotRef = useRef<THREE.Group>(null);
 
   const [skinData, setSkinData] = useState<ProcessedSkinData | null>(null);
+  const [hatVisible, setHatVisible] = useState(true);
+  const [nodAnimation, setNodAnimation] = useState<number | null>(null);
+  const [armSwingAnimation, setArmSwingAnimation] = useState<number | null>(null);
+  const [kickAnimation, setKickAnimation] = useState<number | null>(null);
+  const [jumpTime, setJumpTime] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [extraRotationY, setExtraRotationY] = useState(0);
+  const lastPointerX = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -54,28 +65,21 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
 
   // Build Geometries
   const geometries = useMemo(() => {
-    // Standard Minecraft dimensions:
-    // Head: 8x8x8. Base at (0, 0), Hat at (32, 0)
     const headBase = createMinecraftBoxGeometry(8, 8, 8, 0, 0, 8, 8, 8);
     const headHat = createMinecraftBoxGeometry(8.6, 8.6, 8.6, 32, 0, 8, 8, 8);
 
-    // Torso: 8x12x4. Base at (16, 16), Jacket at (16, 32)
     const bodyBase = createMinecraftBoxGeometry(8, 12, 4, 16, 16, 8, 12, 4);
     const bodyJacket = createMinecraftBoxGeometry(8.6, 12.6, 4.6, 16, 32, 8, 12, 4);
 
-    // Right Arm: 4x12x4 (or 3x12x4). Base at (40, 16), Sleeve at (40, 32)
     const rightArmBase = createMinecraftBoxGeometry(armWidth, 12, 4, 40, 16, armWidth, 12, 4);
     const rightArmSleeve = createMinecraftBoxGeometry(armWidth + 0.6, 12.6, 4.6, 40, 32, armWidth, 12, 4);
 
-    // Left Arm: 4x12x4 (or 3x12x4). Base at (32, 48), Sleeve at (48, 48)
     const leftArmBase = createMinecraftBoxGeometry(armWidth, 12, 4, 32, 48, armWidth, 12, 4);
     const leftArmSleeve = createMinecraftBoxGeometry(armWidth + 0.6, 12.6, 4.6, 48, 48, armWidth, 12, 4);
 
-    // Right Leg: 4x12x4. Base at (0, 16), Pants at (0, 32)
     const rightLegBase = createMinecraftBoxGeometry(4, 12, 4, 0, 16, 4, 12, 4);
     const rightLegPants = createMinecraftBoxGeometry(4.6, 12.6, 4.6, 0, 32, 4, 12, 4);
 
-    // Left Leg: 4x12x4. Base at (16, 48), Pants at (0, 48)
     const leftLegBase = createMinecraftBoxGeometry(4, 12, 4, 16, 48, 4, 12, 4);
     const leftLegPants = createMinecraftBoxGeometry(4.6, 12.6, 4.6, 0, 48, 4, 12, 4);
 
@@ -114,120 +118,251 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
   useFrame((state, delta) => {
     const t = state.clock.getElapsedTime();
 
+    // Double-click jump animation
+    if (jumpTime !== null && groupRef.current) {
+      const elapsedJump = (Date.now() - jumpTime) / 1000;
+      if (elapsedJump > 0.45) {
+        setJumpTime(null);
+        groupRef.current.position.y = position[1];
+      } else {
+        const jumpH = Math.sin((elapsedJump / 0.45) * Math.PI) * 0.8;
+        groupRef.current.position.y = position[1] + jumpH;
+      }
+    }
+
+    // Drag rotation
+    if (groupRef.current) {
+      groupRef.current.rotation.y = rotation[1] + extraRotationY;
+    }
+
     // 1. Idle breathing
     if (bodyRef.current) {
       bodyRef.current.position.y = 18 + Math.sin(t * 2) * 0.15;
     }
 
-    // 2. Head Tracking
-    if (headPivotRef.current && cursorTracking) {
-      const mouse = state.pointer; // normalized [-1, 1]
-      // Clamped pitch & yaw
-      const targetYaw = THREE.MathUtils.clamp(-mouse.x * 0.7, -0.65, 0.65);
-      const targetPitch = THREE.MathUtils.clamp(-mouse.y * 0.45, -0.4, 0.4);
-      headPivotRef.current.rotation.y = THREE.MathUtils.damp(headPivotRef.current.rotation.y, targetYaw, 6, delta);
-      headPivotRef.current.rotation.x = THREE.MathUtils.damp(headPivotRef.current.rotation.x, targetPitch, 6, delta);
+    // 2. Head Tracking & Nodding
+    if (headPivotRef.current) {
+      if (nodAnimation !== null) {
+        const elapsedNod = (Date.now() - nodAnimation) / 1000;
+        if (elapsedNod > 0.6) {
+          setNodAnimation(null);
+        } else {
+          headPivotRef.current.rotation.x = Math.sin(elapsedNod * Math.PI * 4) * 0.35;
+        }
+      } else if (cursorTracking) {
+        const mouse = state.pointer; // normalized [-1, 1]
+        const targetYaw = THREE.MathUtils.clamp(-mouse.x * 0.7, -0.65, 0.65);
+        const targetPitch = THREE.MathUtils.clamp(-mouse.y * 0.45, -0.4, 0.4);
+        headPivotRef.current.rotation.y = THREE.MathUtils.damp(headPivotRef.current.rotation.y, targetYaw, 6, delta);
+        headPivotRef.current.rotation.x = THREE.MathUtils.damp(headPivotRef.current.rotation.x, targetPitch, 6, delta);
+      }
     }
 
-    // 3. Pose-specific animations
-    if (pose === 'waving') {
-      // Right arm waves
-      if (rightArmPivotRef.current) {
-        rightArmPivotRef.current.rotation.x = -Math.PI + 0.3;
-        rightArmPivotRef.current.rotation.z = Math.sin(t * 6) * 0.3 - 0.2;
+    // 3. Arm swing on click
+    if (armSwingAnimation !== null && rightArmPivotRef.current) {
+      const elapsed = (Date.now() - armSwingAnimation) / 1000;
+      if (elapsed > 0.4) {
+        setArmSwingAnimation(null);
+      } else {
+        rightArmPivotRef.current.rotation.x = -Math.sin(elapsed * Math.PI * 5) * 1.2;
       }
-      if (leftArmPivotRef.current) {
-        leftArmPivotRef.current.rotation.x = Math.sin(t * 1.5) * 0.08;
-        leftArmPivotRef.current.rotation.z = 0.05;
+    }
+
+    // 4. Kick on click
+    if (kickAnimation !== null && rightLegPivotRef.current) {
+      const elapsed = (Date.now() - kickAnimation) / 1000;
+      if (elapsed > 0.4) {
+        setKickAnimation(null);
+      } else {
+        rightLegPivotRef.current.rotation.x = -Math.sin(elapsed * Math.PI * 5) * 0.9;
       }
-    } else if (pose === 'walking') {
-      const walkSpeed = 6;
-      const swing = Math.sin(t * walkSpeed) * 0.6;
-      if (rightArmPivotRef.current) rightArmPivotRef.current.rotation.x = swing;
-      if (leftArmPivotRef.current) leftArmPivotRef.current.rotation.x = -swing;
-      if (rightLegPivotRef.current) rightLegPivotRef.current.rotation.x = -swing * 0.8;
-      if (leftLegPivotRef.current) leftLegPivotRef.current.rotation.x = swing * 0.8;
-    } else if (pose === 'look-back') {
-      // Look back pose (Snowy Peaks / The End)
-      if (groupRef.current) {
-        groupRef.current.rotation.y = Math.PI;
-      }
-      if (rightArmPivotRef.current) {
-        rightArmPivotRef.current.rotation.x = Math.sin(t * 1.5) * 0.06;
-      }
-    } else {
-      // Default Idle
-      if (rightArmPivotRef.current) {
-        if (heldItem === 'diamond-pickaxe' || heldItem === 'torch' || heldItem === 'soul-lantern') {
-          // Raise arm slightly to hold item
-          rightArmPivotRef.current.rotation.x = -0.55 + Math.sin(t * 1.5) * 0.04;
-          rightArmPivotRef.current.rotation.z = -0.1;
-        } else {
-          rightArmPivotRef.current.rotation.x = Math.sin(t * 1.5) * 0.08;
-          rightArmPivotRef.current.rotation.z = -0.05;
-        }
-      }
-      if (leftArmPivotRef.current) {
-        if (heldItem === 'book' || heldItem === 'emerald') {
-          leftArmPivotRef.current.rotation.x = -0.45 + Math.sin(t * 1.5) * 0.04;
-          leftArmPivotRef.current.rotation.z = 0.1;
-        } else {
-          leftArmPivotRef.current.rotation.x = -Math.sin(t * 1.5) * 0.08;
-          leftArmPivotRef.current.rotation.z = 0.05;
-        }
-      }
-      if (rightLegPivotRef.current) rightLegPivotRef.current.rotation.x = 0;
-      if (leftLegPivotRef.current) leftLegPivotRef.current.rotation.x = 0;
     }
   });
 
+  const handlePointerDown = (e: any) => {
+    setIsDragging(true);
+    lastPointerX.current = e.clientX || 0;
+    const handleMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - lastPointerX.current;
+      lastPointerX.current = ev.clientX;
+      setExtraRotationY((prev) => prev + dx * 0.015);
+    };
+    const handleUp = () => {
+      setIsDragging(false);
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp);
+  };
+
+  const handleDoubleClick = () => {
+    sounds.playWobble(580);
+    setJumpTime(Date.now());
+    useStore.getState().recordDiscovery('player_jump', 'PLAYER', 'Player Jump');
+  };
+
   return (
-    <group ref={groupRef} position={position} rotation={rotation} scale={scale}>
+    <group
+      ref={groupRef}
+      position={position}
+      rotation={rotation}
+      scale={scale}
+      onPointerDown={handlePointerDown}
+      onDoubleClick={handleDoubleClick}
+    >
       {/* Floating Nametag */}
-      {nametag && <Nametag name={nametag} position={[0, 34, 0]} />}
+      {nametag && (
+        <Interactable
+          id="player_nametag"
+          name="Player Nametag"
+          category="PLAYER"
+          onClick={() => {
+            sounds.playXpOrb();
+            useStore.getState().setToastMessage({
+              title: `Player: ${nametag}`,
+              desc: `Full-stack engineer & Minecraft enthusiast!`,
+              icon: 'diamond'
+            });
+            setTimeout(() => useStore.getState().setToastMessage(null), 3000);
+          }}
+        >
+          <Nametag name={nametag} position={[0, 34, 0]} />
+        </Interactable>
+      )}
 
       {/* Head + Hat (Pivot at neck y=24) */}
       <group ref={headPivotRef} position={[0, 24, 0]}>
-        {/* Head center is at y=4 relative to pivot */}
-        <mesh geometry={geometries.headBase} material={baseMaterial} position={[0, 4, 0]} castShadow receiveShadow />
-        <mesh geometry={geometries.headHat} material={overlayMaterial} position={[0, 4, 0]} castShadow />
+        <Interactable
+          id="player_head"
+          name="Player Head"
+          category="PLAYER"
+          onClick={() => {
+            sounds.playWobble(520);
+            setNodAnimation(Date.now());
+            useStore.getState().recordDiscovery('player_head_nod', 'PLAYER', 'Player Head Nod');
+          }}
+        >
+          <mesh geometry={geometries.headBase} material={baseMaterial} position={[0, 4, 0]} castShadow receiveShadow />
+        </Interactable>
+
+        {hatVisible && (
+          <Interactable
+            id="player_hat"
+            name="Player Hat"
+            category="PLAYER"
+            onClick={() => {
+              sounds.playClick();
+              setHatVisible(!hatVisible);
+              useStore.getState().recordDiscovery('player_hat_toggle', 'PLAYER', 'Toggle Hat Layer');
+            }}
+          >
+            <mesh geometry={geometries.headHat} material={overlayMaterial} position={[0, 4, 0]} castShadow />
+          </Interactable>
+        )}
       </group>
 
       {/* Body / Torso + Jacket (Center at y=18) */}
       <group ref={bodyRef} position={[0, 18, 0]}>
-        <mesh geometry={geometries.bodyBase} material={baseMaterial} castShadow receiveShadow />
-        <mesh geometry={geometries.bodyJacket} material={overlayMaterial} castShadow />
+        <Interactable
+          id="player_torso"
+          name="Player Torso"
+          category="PLAYER"
+          onClick={() => {
+            sounds.playWobble(440);
+            setArmSwingAnimation(Date.now());
+            setKickAnimation(Date.now());
+            useStore.getState().recordDiscovery('player_torso_emote', 'PLAYER', 'Player Body Emote');
+          }}
+        >
+          <mesh geometry={geometries.bodyBase} material={baseMaterial} castShadow receiveShadow />
+          <mesh geometry={geometries.bodyJacket} material={overlayMaterial} castShadow />
+        </Interactable>
       </group>
 
       {/* Right Arm + Sleeve (Pivot at shoulder x=-shoulderOffset, y=22) */}
       <group ref={rightArmPivotRef} position={[-shoulderOffset, 22, 0]}>
-        <mesh geometry={geometries.rightArmBase} material={baseMaterial} position={[0, -4, 0]} castShadow receiveShadow />
-        <mesh geometry={geometries.rightArmSleeve} material={overlayMaterial} position={[0, -4, 0]} castShadow />
+        <Interactable
+          id="player_right_arm"
+          name="Player Right Arm"
+          category="PLAYER"
+          onClick={() => {
+            sounds.playBlockHit('wood');
+            setArmSwingAnimation(Date.now());
+            useStore.getState().recordDiscovery('player_right_arm_swing', 'PLAYER', 'Player Arm Swing');
+          }}
+        >
+          <mesh geometry={geometries.rightArmBase} material={baseMaterial} position={[0, -4, 0]} castShadow receiveShadow />
+          <mesh geometry={geometries.rightArmSleeve} material={overlayMaterial} position={[0, -4, 0]} castShadow />
+        </Interactable>
 
         {/* Held Item in Right Hand */}
         {heldItem !== 'none' && (
           <group position={[0, -9, 2]} rotation={[0.4, 0, 0]}>
-            <HeldItemMesh type={heldItem} />
+            <Interactable
+              id={`player_held_${heldItem}`}
+              name={`Held ${heldItem}`}
+              category="ITEM"
+              onClick={() => {
+                sounds.playItemPop();
+                useStore.getState().recordDiscovery(`player_held_${heldItem}`, 'ITEM', `Held Item: ${heldItem}`);
+              }}
+            >
+              <HeldItemMesh type={heldItem} />
+            </Interactable>
           </group>
         )}
       </group>
 
       {/* Left Arm + Sleeve (Pivot at shoulder x=shoulderOffset, y=22) */}
       <group ref={leftArmPivotRef} position={[shoulderOffset, 22, 0]}>
-        <mesh geometry={geometries.leftArmBase} material={baseMaterial} position={[0, -4, 0]} castShadow receiveShadow />
-        <mesh geometry={geometries.leftArmSleeve} material={overlayMaterial} position={[0, -4, 0]} castShadow />
+        <Interactable
+          id="player_left_arm"
+          name="Player Left Arm"
+          category="PLAYER"
+          onClick={() => {
+            sounds.playBlockHit('wood');
+            setArmSwingAnimation(Date.now());
+            useStore.getState().recordDiscovery('player_left_arm_swing', 'PLAYER', 'Player Left Arm');
+          }}
+        >
+          <mesh geometry={geometries.leftArmBase} material={baseMaterial} position={[0, -4, 0]} castShadow receiveShadow />
+          <mesh geometry={geometries.leftArmSleeve} material={overlayMaterial} position={[0, -4, 0]} castShadow />
+        </Interactable>
       </group>
 
       {/* Right Leg + Pants (Pivot at hip x=-2, y=12) */}
       <group ref={rightLegPivotRef} position={[-2, 12, 0]}>
-        <mesh geometry={geometries.rightLegBase} material={baseMaterial} position={[0, -6, 0]} castShadow receiveShadow />
-        <mesh geometry={geometries.rightLegPants} material={overlayMaterial} position={[0, -6, 0]} castShadow />
+        <Interactable
+          id="player_right_leg"
+          name="Player Right Leg"
+          category="PLAYER"
+          onClick={() => {
+            sounds.playBlockHit('grass');
+            setKickAnimation(Date.now());
+            useStore.getState().recordDiscovery('player_right_leg_kick', 'PLAYER', 'Player Leg Kick');
+          }}
+        >
+          <mesh geometry={geometries.rightLegBase} material={baseMaterial} position={[0, -6, 0]} castShadow receiveShadow />
+          <mesh geometry={geometries.rightLegPants} material={overlayMaterial} position={[0, -6, 0]} castShadow />
+        </Interactable>
       </group>
 
       {/* Left Leg + Pants (Pivot at hip x=2, y=12) */}
       <group ref={leftLegPivotRef} position={[2, 12, 0]}>
-        <mesh geometry={geometries.leftLegBase} material={baseMaterial} position={[0, -6, 0]} castShadow receiveShadow />
-        <mesh geometry={geometries.leftLegPants} material={overlayMaterial} position={[0, -6, 0]} castShadow />
+        <Interactable
+          id="player_left_leg"
+          name="Player Left Leg"
+          category="PLAYER"
+          onClick={() => {
+            sounds.playBlockHit('grass');
+            setKickAnimation(Date.now());
+            useStore.getState().recordDiscovery('player_left_leg_kick', 'PLAYER', 'Player Left Leg');
+          }}
+        >
+          <mesh geometry={geometries.leftLegBase} material={baseMaterial} position={[0, -6, 0]} castShadow receiveShadow />
+          <mesh geometry={geometries.leftLegPants} material={overlayMaterial} position={[0, -6, 0]} castShadow />
+        </Interactable>
       </group>
     </group>
   );

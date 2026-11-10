@@ -2,6 +2,9 @@ import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { ContactShadows } from '@react-three/drei';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 /**
  * Dynamic Flickering Point Light
@@ -80,17 +83,30 @@ export const VolumetricLightShaft: React.FC<{
   });
 
   return (
-    <mesh ref={meshRef} position={position} rotation={rotation} scale={scale}>
-      <cylinderGeometry args={[0.5, 2.2, 10, 16, 1, true]} />
-      <meshBasicMaterial
-        color={color}
-        transparent
-        opacity={opacity}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
+    <Interactable
+      id="env_light_shaft"
+      name="Sunbeam God Ray"
+      category="LIGHT_SOURCE"
+      position={position}
+      rotation={rotation}
+      scale={scale}
+      onClick={() => {
+        sounds.playClick();
+        useStore.getState().recordDiscovery('env_light_shaft', 'LIGHT_SOURCE', 'Sunbeam God Ray');
+      }}
+    >
+      <mesh ref={meshRef}>
+        <cylinderGeometry args={[0.5, 2.2, 10, 16, 1, true]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={opacity}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+        />
+      </mesh>
+    </Interactable>
   );
 };
 
@@ -137,24 +153,34 @@ export const DustMotes: React.FC<{
   });
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={positions}
-          itemSize={3}
+    <Interactable
+      id="env_dust_motes"
+      name="Sunlight Pollen Motes"
+      category="PARTICLE"
+      onClick={() => {
+        sounds.playParticleBurst();
+        useStore.getState().recordDiscovery('env_dust_motes', 'PARTICLE', 'Pollen Dust Motes');
+      }}
+    >
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={count}
+            array={positions}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          size={size}
+          color={color}
+          transparent
+          opacity={0.6}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
         />
-      </bufferGeometry>
-      <pointsMaterial
-        size={size}
-        color={color}
-        transparent
-        opacity={0.6}
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-      />
-    </points>
+      </points>
+    </Interactable>
   );
 };
 
@@ -171,7 +197,6 @@ export const DriftingVoxelClouds: React.FC<{
 
   const cloudBlocks = useMemo(() => {
     const blocks: [number, number, number, number, number, number][] = [];
-    // 3 large cloud clusters
     const clusters = [-15, 0, 15];
     clusters.forEach((cx) => {
       blocks.push([cx, altitude, -8, 8, 1, 4]);
@@ -191,19 +216,29 @@ export const DriftingVoxelClouds: React.FC<{
   });
 
   return (
-    <group ref={groupRef}>
-      {cloudBlocks.map(([x, y, z, w, h, d], i) => (
-        <mesh key={i} position={[x, y, z]} castShadow receiveShadow>
-          <boxGeometry args={[w, h, d]} />
-          <meshStandardMaterial
-            color={color}
-            roughness={0.9}
-            transparent
-            opacity={0.88}
-          />
-        </mesh>
-      ))}
-    </group>
+    <Interactable
+      id="env_voxel_clouds"
+      name="Drifting Voxel Clouds"
+      category="SKY"
+      onClick={() => {
+        sounds.playWobble(520);
+        useStore.getState().recordDiscovery('env_voxel_clouds', 'SKY', 'Puffy Voxel Clouds');
+      }}
+    >
+      <group ref={groupRef}>
+        {cloudBlocks.map(([x, y, z, w, h, d], i) => (
+          <mesh key={i} position={[x, y, z]} castShadow receiveShadow>
+            <boxGeometry args={[w, h, d]} />
+            <meshStandardMaterial
+              color={color}
+              roughness={0.9}
+              transparent
+              opacity={0.88}
+            />
+          </mesh>
+        ))}
+      </group>
+    </Interactable>
   );
 };
 

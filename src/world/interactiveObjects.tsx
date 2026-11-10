@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { sounds } from '../audio/soundManager';
+import { Interactable } from '../interaction/Interactable';
+import { useStore } from '../store';
 
 /**
  * 3D Interactive Minecraft Chest with animated open lid
@@ -25,16 +27,18 @@ export const Chest3D: React.FC<{
     e.stopPropagation();
     sounds.playChestOpen();
     setIsOpen(!isOpen);
+    useStore.getState().recordDiscovery('prop_chest_open', 'PROP', 'Treasure Chest');
   };
 
   return (
-    <group
+    <Interactable
+      id="prop_chest"
+      name="Treasure Chest"
+      category="PROP"
       position={position}
       rotation={rotation}
       scale={0.5}
       onClick={toggleChest}
-      onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
-      onPointerOut={() => { document.body.style.cursor = 'default'; }}
     >
       {/* Chest Base */}
       <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
@@ -60,7 +64,7 @@ export const Chest3D: React.FC<{
           <meshStandardMaterial color="#CCCCCC" metalness={0.9} roughness={0.3} />
         </mesh>
       </group>
-    </group>
+    </Interactable>
   );
 };
 
@@ -92,12 +96,10 @@ export const EnchantingTable3D: React.FC<{
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
     if (bookRef.current) {
-      // Gentle floating bob and slow spin
       bookRef.current.position.y = 1.3 + Math.sin(t * 2) * 0.08;
       bookRef.current.rotation.y = t * 0.5;
     }
     if (leftPageRef.current && rightPageRef.current) {
-      // Subtle page flapping
       leftPageRef.current.rotation.y = -0.4 + Math.sin(t * 4) * 0.05;
       rightPageRef.current.rotation.y = 0.4 - Math.sin(t * 4) * 0.05;
     }
@@ -106,8 +108,19 @@ export const EnchantingTable3D: React.FC<{
     }
   });
 
+  const handleTableClick = () => {
+    sounds.playEnchantChime();
+    useStore.getState().recordDiscovery('prop_enchanting_table', 'PROP', 'Enchanting Table');
+  };
+
   return (
-    <group position={position}>
+    <Interactable
+      id="prop_enchanting_table"
+      name="Enchanting Table"
+      category="PROP"
+      position={position}
+      onClick={handleTableClick}
+    >
       {/* Obsidian Table Base (3/4 block high = 0.75) */}
       <mesh position={[0, 0.375, 0]} castShadow receiveShadow>
         <boxGeometry args={[1.5, 0.75, 1.5]} />
@@ -141,17 +154,12 @@ export const EnchantingTable3D: React.FC<{
         ref={bookRef}
         position={[0, 1.3, 0]}
         scale={0.18}
-        onClick={() => sounds.playEnchantChime()}
-        onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { document.body.style.cursor = 'default'; }}
       >
-        {/* Book Spine */}
         <mesh position={[0, 0, 0]}>
           <boxGeometry args={[0.6, 3.2, 0.4]} />
           <meshStandardMaterial color="#881B1B" roughness={0.6} />
         </mesh>
 
-        {/* Left Open Cover + Page */}
         <group ref={leftPageRef} position={[-0.3, 0, 0]} rotation={[0, -0.4, 0]}>
           <mesh position={[-1.2, 0, 0]}>
             <boxGeometry args={[2.4, 3.0, 0.15]} />
@@ -159,7 +167,6 @@ export const EnchantingTable3D: React.FC<{
           </mesh>
         </group>
 
-        {/* Right Open Cover + Page */}
         <group ref={rightPageRef} position={[0.3, 0, 0]} rotation={[0, 0.4, 0]}>
           <mesh position={[1.2, 0, 0]}>
             <boxGeometry args={[2.4, 3.0, 0.15]} />
@@ -178,7 +185,7 @@ export const EnchantingTable3D: React.FC<{
         </bufferGeometry>
         <pointsMaterial size={0.08} color="#CC66FF" transparent opacity={0.85} />
       </points>
-    </group>
+    </Interactable>
   );
 };
 
@@ -190,6 +197,7 @@ export const Campfire3D: React.FC<{
 }> = ({ position = [0, 0, 0] }) => {
   const fireRef = useRef<THREE.Group>(null);
   const smokeRef = useRef<THREE.Points>(null);
+  const [lit, setLit] = useState(true);
 
   // Smoke particles
   const smokeParticles = React.useMemo(() => {
@@ -205,17 +213,14 @@ export const Campfire3D: React.FC<{
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
-    if (fireRef.current) {
+    if (fireRef.current && lit) {
       fireRef.current.scale.y = 0.9 + Math.sin(t * 12) * 0.15;
     }
-    if (smokeRef.current) {
+    if (smokeRef.current && lit) {
       const positions = smokeRef.current.geometry.attributes.position.array as Float32Array;
       for (let i = 0; i < 25; i++) {
-        // Move upward
         positions[i * 3 + 1] += 0.02;
-        // Drift with wind
         positions[i * 3] += Math.sin(t + i) * 0.005;
-        // Reset when too high
         if (positions[i * 3 + 1] > 5) {
           positions[i * 3 + 1] = 0.5;
           positions[i * 3] = (Math.random() - 0.5) * 0.3;
@@ -226,12 +231,19 @@ export const Campfire3D: React.FC<{
     }
   });
 
+  const toggleCampfire = () => {
+    sounds.playClick();
+    setLit(!lit);
+    useStore.getState().recordDiscovery('light_campfire_toggle', 'LIGHT_SOURCE', 'Campfire Flame');
+  };
+
   return (
-    <group
+    <Interactable
+      id="light_campfire"
+      name="Cozy Campfire"
+      category="LIGHT_SOURCE"
       position={position}
-      onClick={() => sounds.playClick()}
-      onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
-      onPointerOut={() => { document.body.style.cursor = 'default'; }}
+      onClick={toggleCampfire}
     >
       {/* 4 Wooden Logs Base */}
       <mesh position={[0, 0.12, 0.4]} rotation={[0, 0, Math.PI / 2]} castShadow>
@@ -252,31 +264,35 @@ export const Campfire3D: React.FC<{
       </mesh>
 
       {/* Animated Fire Flame Voxels */}
-      <group ref={fireRef} position={[0, 0.3, 0]}>
-        <mesh position={[0, 0.2, 0]}>
-          <boxGeometry args={[0.5, 0.6, 0.5]} />
-          <meshBasicMaterial color="#FF6600" />
-        </mesh>
-        <mesh position={[0, 0.25, 0]}>
-          <boxGeometry args={[0.3, 0.7, 0.3]} />
-          <meshBasicMaterial color="#FFDD00" />
-        </mesh>
-      </group>
+      {lit && (
+        <>
+          <group ref={fireRef} position={[0, 0.3, 0]}>
+            <mesh position={[0, 0.2, 0]}>
+              <boxGeometry args={[0.5, 0.6, 0.5]} />
+              <meshBasicMaterial color="#FF6600" />
+            </mesh>
+            <mesh position={[0, 0.25, 0]}>
+              <boxGeometry args={[0.3, 0.7, 0.3]} />
+              <meshBasicMaterial color="#FFDD00" />
+            </mesh>
+          </group>
 
-      {/* Warm Fire Point Light */}
-      <pointLight color="#FF9933" intensity={3.5} distance={15} decay={2} position={[0, 0.8, 0]} />
+          {/* Warm Fire Point Light */}
+          <pointLight color="#FF9933" intensity={3.5} distance={15} decay={2} position={[0, 0.8, 0]} />
 
-      {/* Rising Smoke Particles */}
-      <points ref={smokeRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[smokeParticles, 3]}
-          />
-        </bufferGeometry>
-        <pointsMaterial size={0.18} color="#DCDCDC" transparent opacity={0.65} />
-      </points>
-    </group>
+          {/* Rising Smoke Particles */}
+          <points ref={smokeRef}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                args={[smokeParticles, 3]}
+              />
+            </bufferGeometry>
+            <pointsMaterial size={0.18} color="#DCDCDC" transparent opacity={0.65} />
+          </points>
+        </>
+      )}
+    </Interactable>
   );
 };
 
@@ -288,6 +304,7 @@ export const EndCrystal3D: React.FC<{
 }> = ({ position = [0, 0, 0] }) => {
   const outerCubeRef = useRef<THREE.Mesh>(null);
   const innerCubeRef = useRef<THREE.Mesh>(null);
+  const [active, setActive] = useState(true);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
@@ -301,8 +318,20 @@ export const EndCrystal3D: React.FC<{
     }
   });
 
+  const toggleCrystal = () => {
+    sounds.playWobble(660);
+    setActive(!active);
+    useStore.getState().recordDiscovery('light_end_crystal', 'LIGHT_SOURCE', 'Ender Crystal Beam');
+  };
+
   return (
-    <group position={position}>
+    <Interactable
+      id="light_end_crystal"
+      name="Ender Crystal"
+      category="LIGHT_SOURCE"
+      position={position}
+      onClick={toggleCrystal}
+    >
       {/* Bedrock Base Plate */}
       <mesh position={[0, 0.1, 0]}>
         <boxGeometry args={[1.6, 0.2, 1.6]} />
@@ -322,12 +351,16 @@ export const EndCrystal3D: React.FC<{
       </mesh>
 
       {/* Vertical Purple Beacon Beam into sky */}
-      <mesh position={[0, 15, 0]}>
-        <cylinderGeometry args={[0.15, 0.15, 30, 8]} />
-        <meshBasicMaterial color="#CC44FF" transparent opacity={0.7} />
-      </mesh>
-
-      <pointLight color="#D670D6" intensity={4} distance={20} decay={2} position={[0, 2, 0]} />
-    </group>
+      {active && (
+        <>
+          <mesh position={[0, 15, 0]}>
+            <cylinderGeometry args={[0.15, 0.15, 30, 8]} />
+            <meshBasicMaterial color="#CC44FF" transparent opacity={0.7} />
+          </mesh>
+          <pointLight color="#D670D6" intensity={4} distance={20} decay={2} position={[0, 2, 0]} />
+        </>
+      )}
+    </Interactable>
   );
 };
+

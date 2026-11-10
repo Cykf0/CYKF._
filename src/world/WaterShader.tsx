@@ -1,6 +1,9 @@
 import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 /**
  * Procedural Realistic Minecraft Water Shader
@@ -100,13 +103,23 @@ export const RealisticWaterPool: React.FC<{
   });
 
   return (
-    <mesh
-      ref={meshRef}
+    <Interactable
+      id="liquid_water_pool"
+      name="Lush Spring Water Pool"
+      category="LIQUID"
       position={position}
-      receiveShadow
+      onClick={() => {
+        sounds.playWaterSplash();
+        useStore.getState().recordDiscovery('liquid_water_pool', 'LIQUID', 'Lush Cave Spring Water');
+      }}
     >
-      <boxGeometry args={size} />
-      <primitive object={waterShader} ref={materialRef} attach="material" />
-    </mesh>
+      <mesh
+        ref={meshRef}
+        receiveShadow
+      >
+        <boxGeometry args={size} />
+        <primitive object={waterShader} ref={materialRef} attach="material" />
+      </mesh>
+    </Interactable>
   );
 };

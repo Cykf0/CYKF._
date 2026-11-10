@@ -1,7 +1,9 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { sounds } from '../audio/soundManager';
+import { Interactable } from '../interaction/Interactable';
+import { useStore } from '../store';
 
 /**
  * 3D Low-Poly Minecraft Sheep
@@ -16,36 +18,53 @@ export const Sheep: React.FC<{
   woolColor = '#EAEAEA',
 }) => {
   const headRef = useRef<THREE.Group>(null);
+  const [isSheared, setIsSheared] = useState(false);
 
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
     if (headRef.current) {
-      // Gentle grazing bob
       headRef.current.rotation.x = 0.2 + Math.sin(t * 1.5) * 0.1;
     }
   });
 
+  const handleSheepClick = () => {
+    sounds.playSheepBaa();
+    useStore.getState().recordDiscovery('mob_sheep_baa', 'MOB', 'Fluffy Sheep');
+  };
+
+  const handleRightClick = () => {
+    sounds.playItemPop();
+    setIsSheared(!isSheared);
+    useStore.getState().recordDiscovery('mob_sheep_shear', 'MOB', 'Shear Sheep Wool');
+  };
+
   return (
-    <group position={position} rotation={rotation} scale={0.4}>
+    <Interactable
+      id="mob_sheep"
+      name="Fluffy Sheep"
+      category="MOB"
+      onClick={handleSheepClick}
+      onRightClick={handleRightClick}
+      position={position}
+      rotation={rotation}
+      scale={0.4}
+    >
       {/* Wool Body */}
       <mesh position={[0, 1.2, 0]} castShadow>
-        <boxGeometry args={[1.8, 1.4, 2.2]} />
-        <meshStandardMaterial color={woolColor} roughness={0.9} />
+        <boxGeometry args={[1.8, isSheared ? 1.0 : 1.4, 2.2]} />
+        <meshStandardMaterial color={isSheared ? '#D4B895' : woolColor} roughness={0.9} />
       </mesh>
 
       {/* Head */}
       <group ref={headRef} position={[0, 1.5, 1.3]}>
-        {/* Head wool back */}
         <mesh position={[0, 0.2, 0]}>
           <boxGeometry args={[1.0, 1.0, 1.0]} />
           <meshStandardMaterial color={woolColor} roughness={0.9} />
         </mesh>
-        {/* Pink/Tan Face */}
         <mesh position={[0, 0, 0.35]}>
           <boxGeometry args={[0.8, 0.7, 0.7]} />
           <meshStandardMaterial color="#E5C7B0" roughness={0.8} />
         </mesh>
-        {/* Black eyes */}
         <mesh position={[-0.32, 0.1, 0.71]}>
           <planeGeometry args={[0.15, 0.15]} />
           <meshBasicMaterial color="#111111" />
@@ -68,7 +87,7 @@ export const Sheep: React.FC<{
           <meshStandardMaterial color="#E5C7B0" roughness={0.9} />
         </mesh>
       ))}
-    </group>
+    </Interactable>
   );
 };
 
@@ -92,39 +111,36 @@ export const Villager: React.FC<{
     }
   });
 
-  const handleClick = (e: any) => {
-    e.stopPropagation();
+  const handleClick = () => {
     sounds.playVillagerHmm();
     if (onInteract) onInteract();
+    useStore.getState().recordDiscovery('mob_villager_hmm', 'MOB', 'Villager Merchant');
   };
 
   return (
-    <group
+    <Interactable
+      id="mob_villager"
+      name="Village Merchant"
+      category="MOB"
+      onClick={handleClick}
       position={position}
       rotation={rotation}
       scale={0.065}
-      onClick={handleClick}
-      onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
-      onPointerOut={() => { document.body.style.cursor = 'default'; }}
     >
       {/* Head Pivot at y=24 */}
       <group ref={headRef} position={[0, 24, 0]}>
-        {/* Head */}
         <mesh position={[0, 5, 0]} castShadow>
           <boxGeometry args={[8, 10, 8]} />
           <meshStandardMaterial color="#C8966E" roughness={0.8} />
         </mesh>
-        {/* Iconic Large Nose */}
         <mesh position={[0, 3, 4.8]} castShadow>
           <boxGeometry args={[2, 4, 2]} />
           <meshStandardMaterial color="#BA835C" roughness={0.8} />
         </mesh>
-        {/* Monobrow */}
         <mesh position={[0, 6.2, 4.05]}>
           <planeGeometry args={[6, 1.2]} />
           <meshBasicMaterial color="#3D2616" />
         </mesh>
-        {/* Green Eyes */}
         <mesh position={[-2, 4.8, 4.05]}>
           <planeGeometry args={[1.4, 1.2]} />
           <meshBasicMaterial color="#1B9942" />
@@ -152,7 +168,7 @@ export const Villager: React.FC<{
         <boxGeometry args={[9, 8, 6]} />
         <meshStandardMaterial color="#4A3423" roughness={0.9} />
       </mesh>
-    </group>
+    </Interactable>
   );
 };
 
@@ -172,15 +188,27 @@ export const Enderman: React.FC<{
     }
   });
 
+  const handleClick = () => {
+    sounds.playEndermanVwoop();
+    useStore.getState().recordDiscovery('mob_enderman_vwoop', 'MOB', 'Enderman Teleport');
+  };
+
   return (
-    <group position={position} rotation={rotation} scale={0.055}>
+    <Interactable
+      id="mob_enderman"
+      name="Ender Watcher"
+      category="MOB"
+      onClick={handleClick}
+      position={position}
+      rotation={rotation}
+      scale={0.055}
+    >
       {/* Head */}
       <group ref={headRef} position={[0, 40, 0]}>
         <mesh castShadow>
           <boxGeometry args={[8, 8, 8]} />
           <meshStandardMaterial color="#0E0E12" roughness={0.9} />
         </mesh>
-        {/* Glowing Purple Eyes */}
         <mesh position={[-2.2, 0.5, 4.05]}>
           <planeGeometry args={[2.0, 0.8]} />
           <meshBasicMaterial color="#CC44FF" />
@@ -189,7 +217,6 @@ export const Enderman: React.FC<{
           <planeGeometry args={[2.0, 0.8]} />
           <meshBasicMaterial color="#CC44FF" />
         </mesh>
-        {/* Eye glow light */}
         <pointLight color="#CC44FF" intensity={0.8} distance={5} position={[0, 0.5, 4.5]} />
       </group>
 
@@ -218,7 +245,7 @@ export const Enderman: React.FC<{
         <boxGeometry args={[2, 22, 2]} />
         <meshStandardMaterial color="#0A0A0E" roughness={0.9} />
       </mesh>
-    </group>
+    </Interactable>
   );
 };
 
@@ -234,46 +261,51 @@ export const Axolotl: React.FC<{ position?: [number, number, number] }> = ({
   useFrame((state) => {
     const t = state.clock.getElapsedTime();
     if (axolotlRef.current) {
-      // Gentle circular swimming path
       axolotlRef.current.position.x = position[0] + Math.sin(t * 0.8) * 0.8;
       axolotlRef.current.position.z = position[2] + Math.cos(t * 0.8) * 0.8;
       axolotlRef.current.rotation.y = t * 0.8 + Math.PI / 2;
     }
     if (tailRef.current) {
-      // Undulating tail
       tailRef.current.rotation.y = Math.sin(t * 4) * 0.35;
     }
   });
 
+  const handleClick = () => {
+    sounds.playWaterSplash();
+    useStore.getState().recordDiscovery('mob_axolotl_splash', 'MOB', 'Playful Axolotl');
+  };
+
   return (
-    <group ref={axolotlRef} position={position} scale={0.35}>
-      {/* Pink Body */}
-      <mesh castShadow>
-        <boxGeometry args={[0.8, 0.4, 1.4]} />
-        <meshStandardMaterial color="#FFB6C1" roughness={0.6} />
-      </mesh>
-
-      {/* Head */}
-      <mesh position={[0, 0.05, 0.85]} castShadow>
-        <boxGeometry args={[1.0, 0.5, 0.6]} />
-        <meshStandardMaterial color="#FFB6C1" roughness={0.6} />
-      </mesh>
-
-      {/* Gills (External Red Frills) */}
-      <mesh position={[-0.6, 0.2, 0.8]}>
-        <boxGeometry args={[0.3, 0.5, 0.2]} />
-        <meshStandardMaterial color="#FF1493" roughness={0.5} />
-      </mesh>
-      <mesh position={[0.6, 0.2, 0.8]}>
-        <boxGeometry args={[0.3, 0.5, 0.2]} />
-        <meshStandardMaterial color="#FF1493" roughness={0.5} />
-      </mesh>
-
-      {/* Animated Swimming Tail */}
-      <mesh ref={tailRef} position={[0, 0, -1.0]}>
-        <boxGeometry args={[0.2, 0.6, 0.8]} />
-        <meshStandardMaterial color="#FF69B4" roughness={0.6} />
-      </mesh>
-    </group>
+    <Interactable
+      id="mob_axolotl"
+      name="Playful Axolotl"
+      category="MOB"
+      onClick={handleClick}
+      position={position}
+      scale={0.35}
+    >
+      <group ref={axolotlRef}>
+        <mesh castShadow>
+          <boxGeometry args={[0.8, 0.4, 1.4]} />
+          <meshStandardMaterial color="#FFB6C1" roughness={0.6} />
+        </mesh>
+        <mesh position={[0, 0.05, 0.85]} castShadow>
+          <boxGeometry args={[1.0, 0.5, 0.6]} />
+          <meshStandardMaterial color="#FFB6C1" roughness={0.6} />
+        </mesh>
+        <mesh position={[-0.6, 0.2, 0.8]}>
+          <boxGeometry args={[0.3, 0.5, 0.2]} />
+          <meshStandardMaterial color="#FF1493" roughness={0.5} />
+        </mesh>
+        <mesh position={[0.6, 0.2, 0.8]}>
+          <boxGeometry args={[0.3, 0.5, 0.2]} />
+          <meshStandardMaterial color="#FF1493" roughness={0.5} />
+        </mesh>
+        <mesh ref={tailRef} position={[0, 0, -1.0]}>
+          <boxGeometry args={[0.2, 0.6, 0.8]} />
+          <meshStandardMaterial color="#FF69B4" roughness={0.6} />
+        </mesh>
+      </group>
+    </Interactable>
   );
 };

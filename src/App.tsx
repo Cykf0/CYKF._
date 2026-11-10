@@ -11,6 +11,9 @@ import { TopLeftInfo } from './hud/TopLeftInfo';
 import { StatusBars } from './hud/StatusBars';
 import { Hotbar } from './hud/Hotbar';
 import { EdgeArrows } from './hud/EdgeArrows';
+import { AdvancementToast } from './interaction/AdvancementToast';
+import { InventoryModal } from './interaction/InventoryModal';
+import { TouchMobileHints } from './interaction/TouchMobileHints';
 
 // Panels
 import { Scene01TitleMenu } from './panels/Scene01TitleMenu';
@@ -90,6 +93,15 @@ export const App: React.FC = () => {
 
       {/* Top Left Global Info */}
       <TopLeftInfo />
+
+      {/* Advancement Toast Notification */}
+      <AdvancementToast />
+
+      {/* Survival Inventory Modal [E] */}
+      <InventoryModal />
+
+      {/* Mobile Touch Hints */}
+      <TouchMobileHints />
 
       {/* Top Right Quick Controls (Mute / Quality) */}
       <header className="fixed top-5 right-6 z-40 flex items-center gap-2 select-none pointer-events-auto">

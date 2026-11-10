@@ -1,6 +1,9 @@
 import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 /**
  * Animated Foliage / Leaves with wind sway and backlit translucency
@@ -23,21 +26,31 @@ export const WindSwayLeaves: React.FC<{
   useFrame((state) => {
     if (meshRef.current) {
       const t = state.clock.getElapsedTime() * swaySpeed;
-      // Gentle wind flutter
       meshRef.current.rotation.z = Math.sin(t + position[0]) * swayAmount;
       meshRef.current.rotation.x = Math.cos(t * 0.8 + position[2]) * swayAmount;
     }
   });
 
   return (
-    <mesh ref={meshRef} position={position} castShadow receiveShadow>
-      <boxGeometry args={size} />
-      <meshStandardMaterial
-        color={color}
-        roughness={0.65}
-        metalness={0.05}
-      />
-    </mesh>
+    <Interactable
+      id="plant_leaves"
+      name="Cherry Blossom Leaves"
+      category="PLANT"
+      position={position}
+      onClick={() => {
+        sounds.playBlockHit('grass');
+        useStore.getState().recordDiscovery('plant_leaves', 'PLANT', 'Cherry Leaves Flutter');
+      }}
+    >
+      <mesh ref={meshRef} castShadow receiveShadow>
+        <boxGeometry args={size} />
+        <meshStandardMaterial
+          color={color}
+          roughness={0.65}
+          metalness={0.05}
+        />
+      </mesh>
+    </Interactable>
   );
 };
 
@@ -58,7 +71,6 @@ export const InstancedGrassField: React.FC<{
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
 
-  // Generate grass blade positions
   const instances = useMemo(() => {
     const list: { pos: [number, number, number]; rotY: number; scale: number; isFlower: boolean }[] = [];
     for (let i = 0; i < count; i++) {
@@ -82,7 +94,6 @@ export const InstancedGrassField: React.FC<{
       instances.forEach((inst, i) => {
         dummy.position.set(...inst.pos);
         dummy.rotation.y = inst.rotY;
-        // Wind sway
         dummy.rotation.z = Math.sin(t + inst.pos[0] * 2.0) * 0.12;
         dummy.scale.set(inst.scale, inst.scale, inst.scale);
         dummy.updateMatrix();
@@ -93,19 +104,29 @@ export const InstancedGrassField: React.FC<{
   });
 
   return (
-    <instancedMesh
-      ref={meshRef}
-      args={[undefined, undefined, count]}
-      castShadow
-      receiveShadow
+    <Interactable
+      id="plant_tall_grass"
+      name="Tall Grass & Flowers"
+      category="PLANT"
+      onClick={() => {
+        sounds.playBlockHit('grass');
+        useStore.getState().recordDiscovery('plant_tall_grass', 'PLANT', 'Field Grass Swish');
+      }}
     >
-      <planeGeometry args={[0.3, 0.5]} />
-      <meshStandardMaterial
-        color={baseColor}
-        roughness={0.8}
-        side={THREE.DoubleSide}
-        alphaTest={0.4}
-      />
-    </instancedMesh>
+      <instancedMesh
+        ref={meshRef}
+        args={[undefined, undefined, count]}
+        castShadow
+        receiveShadow
+      >
+        <planeGeometry args={[0.3, 0.5]} />
+        <meshStandardMaterial
+          color={baseColor}
+          roughness={0.8}
+          side={THREE.DoubleSide}
+          alphaTest={0.4}
+        />
+      </instancedMesh>
+    </Interactable>
   );
 };

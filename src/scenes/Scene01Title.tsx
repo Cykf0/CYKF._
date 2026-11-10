@@ -10,6 +10,9 @@ import {
   CharacterContactShadow,
 } from '../world/EnvironmentEffects';
 import { InstancedGrassField } from '../world/FoliageMaterial';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 export const Scene01Title: React.FC = () => {
   return (
@@ -59,10 +62,19 @@ export const Scene01Title: React.FC = () => {
       <DustMotes count={60} area={[12, 6, 12]} color="#FFE8A3" size={0.06} />
 
       {/* 4. Terrain: PBR Grass Blocks with Normals & Roughness */}
-      <mesh position={[0, -0.5, 0]} receiveShadow>
-        <boxGeometry args={[22, 1, 22]} />
-        <primitive object={blockMaterials.grassTop} attach="material" />
-      </mesh>
+      <Interactable
+        id="scene01_terrain"
+        name="Lush Grass Block Terrain"
+        category="BLOCK"
+        materialType="grass"
+        hardness={350}
+        dropItem="grass_block"
+      >
+        <mesh position={[0, -0.5, 0]} receiveShadow>
+          <boxGeometry args={[22, 1, 22]} />
+          <primitive object={blockMaterials.grassTop} attach="material" />
+        </mesh>
+      </Interactable>
 
       {/* Instanced Tall Grass with Wind Sway */}
       <InstancedGrassField count={80} area={[16, 16]} baseColor="#5B8E34" />
@@ -70,28 +82,73 @@ export const Scene01Title: React.FC = () => {
       {/* 5. Village Cottage */}
       <group position={[-4, 0, -2]}>
         {/* Cobblestone / Stone Bricks Foundation */}
-        <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.5, 1, 4.5]} />
-          <primitive object={blockMaterials.stoneBricks} attach="material" />
-        </mesh>
+        <Interactable
+          id="scene01_cottage_base"
+          name="Cobblestone Cottage Foundation"
+          category="STRUCTURE"
+          materialType="stone"
+          hardness={600}
+        >
+          <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+            <boxGeometry args={[4.5, 1, 4.5]} />
+            <primitive object={blockMaterials.stoneBricks} attach="material" />
+          </mesh>
+        </Interactable>
+
         {/* Oak Plank Walls with Grain Normals */}
-        <mesh position={[0, 2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.2, 2, 4.2]} />
-          <primitive object={blockMaterials.oakPlanks} attach="material" />
-        </mesh>
+        <Interactable
+          id="scene01_cottage_walls"
+          name="Oak Timber Walls"
+          category="STRUCTURE"
+          materialType="wood"
+          hardness={450}
+        >
+          <mesh position={[0, 2, 0]} castShadow receiveShadow>
+            <boxGeometry args={[4.2, 2, 4.2]} />
+            <primitive object={blockMaterials.oakPlanks} attach="material" />
+          </mesh>
+        </Interactable>
+
         {/* Wood Door */}
-        <mesh position={[0, 1.4, 2.12]} castShadow>
-          <planeGeometry args={[0.9, 1.8]} />
-          <meshStandardMaterial color="#4A2E12" roughness={0.7} />
-        </mesh>
+        <Interactable
+          id="scene01_door"
+          name="Oak Wood Door"
+          category="PROP"
+          onClick={() => {
+            sounds.playChestOpen();
+            useStore.getState().recordDiscovery('scene01_door', 'PROP', 'Cottage Door Toggle');
+          }}
+        >
+          <mesh position={[0, 1.4, 2.12]} castShadow>
+            <planeGeometry args={[0.9, 1.8]} />
+            <meshStandardMaterial color="#4A2E12" roughness={0.7} />
+          </mesh>
+        </Interactable>
+
         {/* Sloped Roof */}
-        <mesh position={[0, 3.4, 0]} castShadow receiveShadow>
-          <coneGeometry args={[3.4, 1.6, 4]} />
-          <meshStandardMaterial color="#5C3B1E" roughness={0.8} />
-        </mesh>
+        <Interactable
+          id="scene01_roof"
+          name="Timber Shingle Roof"
+          category="STRUCTURE"
+          materialType="wood"
+        >
+          <mesh position={[0, 3.4, 0]} castShadow receiveShadow>
+            <coneGeometry args={[3.4, 1.6, 4]} />
+            <meshStandardMaterial color="#5C3B1E" roughness={0.8} />
+          </mesh>
+        </Interactable>
 
         {/* Porch Lantern with Dynamic Flickering Warm Light */}
-        <group position={[1.8, 2.2, 1.8]}>
+        <Interactable
+          id="scene01_porch_lantern"
+          name="Porch Hanging Lantern"
+          category="LIGHT_SOURCE"
+          onClick={() => {
+            sounds.playClick();
+            useStore.getState().recordDiscovery('scene01_porch_lantern', 'LIGHT_SOURCE', 'Porch Lantern');
+          }}
+          position={[1.8, 2.2, 1.8]}
+        >
           <mesh castShadow>
             <boxGeometry args={[0.25, 0.35, 0.25]} />
             <meshStandardMaterial
@@ -102,21 +159,41 @@ export const Scene01Title: React.FC = () => {
             />
           </mesh>
           <FlickeringLight position={[0, 0, 0]} color="#FFAA33" baseIntensity={2.2} distance={8} />
-        </group>
+        </Interactable>
       </group>
 
       {/* 6. Wheat Farm Garden */}
       <group position={[-2, 0.05, 3]}>
-        <mesh receiveShadow>
-          <boxGeometry args={[3.5, 0.1, 2.5]} />
-          <primitive object={blockMaterials.dirt} attach="material" />
-        </mesh>
-        {/* Wheat stalks with golden highlights */}
-        {[-1.2, -0.4, 0.4, 1.2].map((wx, i) => (
-          <mesh key={i} position={[wx, 0.35, 0]} castShadow>
-            <boxGeometry args={[0.3, 0.7, 1.8]} />
-            <meshStandardMaterial color="#E2B744" roughness={0.6} />
+        <Interactable
+          id="scene01_farmland"
+          name="Farmland Soil"
+          category="BLOCK"
+          materialType="grass"
+          hardness={300}
+        >
+          <mesh receiveShadow>
+            <boxGeometry args={[3.5, 0.1, 2.5]} />
+            <primitive object={blockMaterials.dirt} attach="material" />
           </mesh>
+        </Interactable>
+
+        {/* Wheat stalks */}
+        {[-1.2, -0.4, 0.4, 1.2].map((wx, i) => (
+          <Interactable
+            key={i}
+            id={`scene01_wheat_${i}`}
+            name="Golden Wheat Crop"
+            category="PLANT"
+            onClick={() => {
+              sounds.playBlockHit('grass');
+              useStore.getState().recordDiscovery(`scene01_wheat_${i}`, 'PLANT', 'Harvest Wheat Crop');
+            }}
+          >
+            <mesh position={[wx, 0.35, 0]} castShadow>
+              <boxGeometry args={[0.3, 0.7, 1.8]} />
+              <meshStandardMaterial color="#E2B744" roughness={0.6} />
+            </mesh>
+          </Interactable>
         ))}
       </group>
 

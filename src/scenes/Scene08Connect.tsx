@@ -11,6 +11,9 @@ import {
   DustMotes,
   CharacterContactShadow,
 } from '../world/EnvironmentEffects';
+import { Interactable } from '../interaction/Interactable';
+import { sounds } from '../audio/soundManager';
+import { useStore } from '../store';
 
 export const Scene08Connect: React.FC = () => {
   const dripRef = useRef<THREE.Points>(null);
@@ -75,21 +78,40 @@ export const Scene08Connect: React.FC = () => {
       <DustMotes count={60} area={[12, 6, 12]} color="#B7E4C7" size={0.06} />
 
       {/* Falling Water Drips */}
-      <points ref={dripRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
-          />
-        </bufferGeometry>
-        <pointsMaterial size={0.08} color="#74C69D" transparent opacity={0.75} />
-      </points>
+      <Interactable
+        id="scene08_water_drips"
+        name="Cave Ceiling Water Droplets"
+        category="PARTICLE"
+        onClick={() => {
+          sounds.playWaterSplash();
+          useStore.getState().recordDiscovery('scene08_water_drips', 'PARTICLE', 'Catch Cave Water Drips');
+        }}
+      >
+        <points ref={dripRef}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              args={[positions, 3]}
+            />
+          </bufferGeometry>
+          <pointsMaterial size={0.08} color="#74C69D" transparent opacity={0.75} />
+        </points>
+      </Interactable>
 
       {/* 3. Moss & Clay Cave Floor with PBR Normals */}
-      <mesh position={[0, -0.5, 0]} receiveShadow>
-        <boxGeometry args={[22, 1, 22]} />
-        <primitive object={blockMaterials.grassTop} attach="material" />
-      </mesh>
+      <Interactable
+        id="scene08_moss_floor"
+        name="Lush Moss & Spore Floor"
+        category="BLOCK"
+        materialType="grass"
+        hardness={350}
+        dropItem="moss_block"
+      >
+        <mesh position={[0, -0.5, 0]} receiveShadow>
+          <boxGeometry args={[22, 1, 22]} />
+          <primitive object={blockMaterials.grassTop} attach="material" />
+        </mesh>
+      </Interactable>
 
       {/* 4. Realistic Animated Water Pool Basin with Caustics & Waves */}
       <group position={[2.4, 0.02, 0]}>
@@ -106,10 +128,22 @@ export const Scene08Connect: React.FC = () => {
           [1.8, 0.1, 1.2],
           [-1.0, 0.1, 1.5],
         ].map(([lx, ly, lz], i) => (
-          <mesh key={i} position={[lx, ly, lz]}>
-            <cylinderGeometry args={[0.45, 0.45, 0.02, 8]} />
-            <meshStandardMaterial color="#2D6A4F" roughness={0.7} />
-          </mesh>
+          <Interactable
+            key={i}
+            id={`scene08_lilypad_${i}`}
+            name="Floating Water Lily Pad"
+            category="PLANT"
+            position={[lx, ly, lz]}
+            onClick={() => {
+              sounds.playWaterSplash();
+              useStore.getState().recordDiscovery(`scene08_lilypad_${i}`, 'PLANT', 'Touch Water Lily Pad');
+            }}
+          >
+            <mesh>
+              <cylinderGeometry args={[0.45, 0.45, 0.02, 8]} />
+              <meshStandardMaterial color="#2D6A4F" roughness={0.7} />
+            </mesh>
+          </Interactable>
         ))}
 
         {/* Swimming Pink Axolotl with Wake */}
@@ -120,28 +154,45 @@ export const Scene08Connect: React.FC = () => {
       {[-3, 0, 3].map((vx, i) => (
         <group key={i} position={[vx, 4.2, -2.2]}>
           {/* Green Vine Tendril */}
-          <mesh position={[0, -1.2, 0]}>
-            <cylinderGeometry args={[0.08, 0.08, 2.4, 6]} />
-            <meshStandardMaterial color="#40916C" roughness={0.8} />
-          </mesh>
+          <Interactable
+            id={`scene08_vine_${i}`}
+            name="Cave Hanging Vine"
+            category="PLANT"
+          >
+            <mesh position={[0, -1.2, 0]}>
+              <cylinderGeometry args={[0.08, 0.08, 2.4, 6]} />
+              <meshStandardMaterial color="#40916C" roughness={0.8} />
+            </mesh>
+          </Interactable>
 
           {/* Glowing Berry Cluster with Dynamic Point Light */}
-          <mesh position={[0, -2.2, 0]}>
-            <boxGeometry args={[0.35, 0.35, 0.35]} />
-            <meshStandardMaterial
-              color="#FFB703"
-              emissive="#FF9E00"
-              emissiveIntensity={3.2}
-              roughness={0.2}
-            />
-          </mesh>
-          <FlickeringLight
+          <Interactable
+            id={`scene08_glowberry_${i}`}
+            name="Sweet Glow Berries"
+            category="LIGHT_SOURCE"
             position={[0, -2.2, 0]}
-            color="#FFB703"
-            baseIntensity={2.5}
-            distance={7}
-            flickerSpeed={6}
-          />
+            onClick={() => {
+              sounds.playEat();
+              useStore.getState().recordDiscovery(`scene08_glowberry_${i}`, 'LIGHT_SOURCE', 'Harvest Glow Berries');
+            }}
+          >
+            <mesh>
+              <boxGeometry args={[0.35, 0.35, 0.35]} />
+              <meshStandardMaterial
+                color="#FFB703"
+                emissive="#FF9E00"
+                emissiveIntensity={3.2}
+                roughness={0.2}
+              />
+            </mesh>
+            <FlickeringLight
+              position={[0, 0, 0]}
+              color="#FFB703"
+              baseIntensity={2.5}
+              distance={7}
+              flickerSpeed={6}
+            />
+          </Interactable>
         </group>
       ))}
 
