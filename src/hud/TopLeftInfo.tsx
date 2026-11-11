@@ -56,7 +56,7 @@ export const TopLeftInfo: React.FC = () => {
         </div>
         <span
           className="text-[#AAAAAA] text-[10px] cursor-pointer hover:text-white"
-          title={`Portfolio Version ${content.version} • Built for Saksham`}
+          title={`Portfolio Version ${content.version} • Built for ${content.owner}`}
           onClick={() => sounds.playClick()}
         >
           {content.version}

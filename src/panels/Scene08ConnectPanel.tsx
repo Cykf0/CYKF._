@@ -116,6 +116,29 @@ export const Scene08ConnectPanel: React.FC = () => {
           </div>
         </a>
 
+        {/* GitHub */}
+        {content.github && (
+          <a
+            href={content.github.startsWith('http') ? content.github : `https://github.com/${content.github}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => sounds.playClick()}
+            className="group flex items-start gap-3 text-left"
+          >
+            <div className="w-6 h-6 mt-0.5 flex items-center justify-center font-pixel text-xs text-[#5C4533]">
+              💻
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-pixel text-[9px] text-[#785E46] uppercase tracking-wider">
+                GITHUB
+              </div>
+              <div className="font-pixel text-[11px] text-[#2C1E14] group-hover:text-blue-900 group-hover:underline truncate mt-0.5">
+                {content.github}
+              </div>
+            </div>
+          </a>
+        )}
+
         {/* Instagram */}
         <a
           href={content.instagram.startsWith('http') ? content.instagram : `https://instagram.com/${content.instagram}`}

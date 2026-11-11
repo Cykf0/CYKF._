@@ -39,7 +39,7 @@ export const Scene01TitleMenu: React.FC = () => {
             {content.brand}
           </h1>
           <div className="mt-2 font-pixel text-[11px] text-[#FFAA00] tracking-widest uppercase drop-shadow-[0_2px_0_#000]">
-            The Developer Archive • Saksham
+            The Developer Archive • {content.owner}
           </div>
         </div>
 

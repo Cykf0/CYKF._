@@ -130,7 +130,7 @@ export interface PortfolioContent {
 export const content: PortfolioContent = {
   brand: "Cykf._",
   version: "v1.0.0",
-  owner: "Saksham",
+  owner: "Saksham Panwar",
   mcUsername: "Cykf_",
   skinPath: "/skins/cykf.png",
   skinModel: "auto", // 'auto' auto-detects 4px classic vs 3px slim
@@ -138,28 +138,28 @@ export const content: PortfolioContent = {
   enableSkinSwap: true,
 
   // Contact Info
-  email: "sakshampanwar0312@gmail.com",
-  location: "GGN, Haryana",
+  email: "sakshampanwar0312@rediffmail.com",
+  location: "Gurgaon (GGN), Haryana, India",
   linkedin: "https://www.linkedin.com/in/saksham-panwar-9847b3412/",
   instagram: "https://instagram.com/cykf._",
-  github: "https://github.com/cykf",
+  github: "https://github.com/Cykf0",
 
   // Player Profile
-  bio: "Full-Stack Developer & Creative Technologist based in GGN, Haryana. Building high-performance web applications, interactive 3D voxel experiences, and modern software architectures.",
-  role: "Full-Stack Developer",
-  level: "Level 42 · Full Stack Architect",
-  server: "GGN · India · Global",
-  status: "Online · Open for contracts",
+  bio: "Full-Stack Software Engineer & Creative Developer based in Gurgaon, Haryana. Crafting high-performance web applications, interactive 3D voxel experiences, audio AI/PWA engineering, and distributed architectures.",
+  role: "Full-Stack Software Engineer",
+  level: "Level 25 · Full Stack Architect",
+  server: "Gurgaon · Haryana · India",
+  status: "Open for Opportunities & Collaborations",
 
   // Exact 7 Skills from reference
   skills: [
-    { id: 'html-css', name: 'HTML / CSS', romanLevel: 'V', percentage: 95 },
-    { id: 'javascript', name: 'JavaScript', romanLevel: 'V', percentage: 90 },
-    { id: 'astro-gsap', name: 'Astro / GSAP', romanLevel: 'IV', percentage: 88 },
-    { id: 'python', name: 'Python', romanLevel: 'IV', percentage: 75 },
-    { id: 'ui-ux', name: 'UI / UX', romanLevel: 'V', percentage: 90 },
-    { id: 'blender', name: 'Blender', romanLevel: 'III', percentage: 70 },
-    { id: 'ai-automation', name: 'AI / Automation', romanLevel: 'IV', percentage: 82 },
+    { id: 'html-css', name: 'HTML / CSS / Tailwind', romanLevel: 'V', percentage: 95 },
+    { id: 'javascript', name: 'JavaScript / TypeScript', romanLevel: 'V', percentage: 92 },
+    { id: 'react-three', name: 'React / Next.js / Three.js', romanLevel: 'V', percentage: 90 },
+    { id: 'python-backend', name: 'Python & Backend APIs', romanLevel: 'IV', percentage: 85 },
+    { id: 'ui-ux', name: 'UI / UX & Design Systems', romanLevel: 'V', percentage: 88 },
+    { id: 'audio-pwa', name: 'PWA & Audio AI Systems', romanLevel: 'IV', percentage: 84 },
+    { id: 'cloud-git', name: 'Git & Cloud DevOps', romanLevel: 'IV', percentage: 86 },
   ],
 
   // 6 Completed Builds (Chest Scene)
@@ -167,67 +167,67 @@ export const content: PortfolioContent = {
     {
       id: 'proj-1',
       slotIndex: 0,
-      title: 'Cykf Voxel Engine',
-      description: 'High-impact interactive 3D voxel engine built with React Three Fiber, GLSL shaders, and procedural world gen.',
+      title: 'CYKF._ 3D Minecraft Portfolio',
+      description: 'Cinematic 9-scene interactive 3D Minecraft voxel portfolio built with React Three Fiber, custom GLSL shaders, authentic audio, and responsive GUI.',
       rarity: 'legendary',
       rarityColor: '#FFAA00', // Gold / Orange
-      tech: ['React', 'Three.js', 'Tailwind'],
-      link: 'https://github.com/Cykf',
+      tech: ['React', 'Three.js', 'TypeScript', 'Tailwind'],
+      link: 'https://github.com/Cykf0/CYKF._',
       iconName: 'nether-star'
     },
     {
       id: 'proj-2',
       slotIndex: 1,
-      title: 'Real-time Telemetry Dashboard',
-      description: 'Interactive real-time telemetry dashboard and state management system for distributed systems.',
-      rarity: 'rare',
-      rarityColor: '#55FFFF', // Cyan
-      tech: ['TypeScript', 'Zustand', 'Node.js'],
-      link: 'https://github.com/Cykf',
+      title: 'Distributed Cloud Services & Telemetry',
+      description: 'High-throughput microservices architecture with real-time WebSocket state distribution, low-latency caching, and live telemetry.',
+      rarity: 'epic',
+      rarityColor: '#FF55FF', // Magenta
+      tech: ['TypeScript', 'Node.js', 'WebSockets', 'Redis'],
+      link: 'https://github.com/Cykf0',
       iconName: 'potion'
     },
     {
       id: 'proj-3',
       slotIndex: 2,
-      title: 'Quantum API Microservices',
-      description: 'High performance asynchronous API microservice pipeline with sub-millisecond response latency.',
-      rarity: 'epic',
-      rarityColor: '#AA00AA', // Purple
-      tech: ['Python', 'FastAPI', 'Redis'],
-      link: 'https://github.com/Cykf',
+      title: 'Real-time Telemetry & State Hub',
+      description: 'High-throughput real-time telemetry dashboard and state management pipeline for distributed microservices and WebSocket event feeds.',
+      rarity: 'rare',
+      rarityColor: '#55FFFF', // Cyan
+      tech: ['TypeScript', 'Zustand', 'Node.js', 'WebSockets'],
+      link: 'https://github.com/Cykf0',
       iconName: 'spyglass'
     },
     {
       id: 'proj-4',
       slotIndex: 3,
       title: 'Autonomous AI Agent Stack',
-      description: 'Next-generation AI agent integration with autonomous reasoning, tool-use, and workflow execution.',
-      rarity: 'legendary',
+      description: 'Autonomous AI agent framework with multi-turn reasoning, tool execution, grounding pipelines, and asynchronous background tasks.',
+      rarity: 'epic',
       rarityColor: '#FFFF55', // Yellow
-      tech: ['Gemini API', 'Vector DB', 'TypeScript'],
-      link: 'https://github.com/Cykf',
+      tech: ['Gemini API', 'Vector DB', 'Python', 'FastAPI'],
+      link: 'https://github.com/Cykf0',
       iconName: 'lightning'
     },
     {
       id: 'proj-5',
       slotIndex: 4,
-      title: 'Procedural Shader Labs',
-      description: 'Dynamic voxel terrain, fluid physics, and custom Minecraft GLSL shader experimentation.',
+      title: 'Procedural Shader & Graphics Lab',
+      description: 'Dynamic voxel terrain rendering, fluid physics simulations, post-processing FX, and custom GLSL vertex/fragment shaders.',
       rarity: 'epic',
-      rarityColor: '#FF55FF', // Magenta
-      tech: ['GLSL', 'R3F', 'Vite'],
-      link: 'https://github.com/Cykf',
+      rarityColor: '#AA00AA', // Purple
+      tech: ['GLSL', 'Three.js', 'R3F', 'Vite'],
+      link: 'https://github.com/Cykf0',
       iconName: 'satellite'
     },
     {
       id: 'proj-6',
       slotIndex: 5,
-      title: 'Accessible UI Design System',
-      description: 'Comprehensive modular Minecraft-inspired component design system with accessible interactions.',
-      rarity: 'common',
-      rarityColor: '#FFFFFF', // White
-      tech: ['Figma', 'Storybook', 'Tailwind'],
-      link: 'https://github.com/Cykf',
+      title: 'Modular Accessible Design System',
+      description: 'Comprehensive pixel-perfect design system and accessible UI component architecture with fluid responsive scaling.',
+      rarity: 'rare',
+      rarityColor: '#55FF55', // Green
+      tech: ['Figma', 'Storybook', 'Tailwind', 'a11y'],
+      link: 'https://github.com/Cykf0',
       iconName: 'palette'
     }
   ],
@@ -237,49 +237,49 @@ export const content: PortfolioContent = {
     {
       id: 'journey-1',
       date: '2024 - Present',
-      title: 'Lead Creative Developer',
-      description: 'Crafting production web applications and 3D experiences for modern clients.',
+      title: 'Lead Full-Stack & WebGL Engineer',
+      description: 'Crafting production web applications, interactive 3D voxel experiences, and real-time client systems.',
       ingredients: ['code', 'layers', 'cloud']
     },
     {
       id: 'journey-2',
       date: '2023 - 2024',
-      title: 'Full Stack Software Engineer',
-      description: 'Engineering high-scale APIs, interactive frontends, and automated tooling.',
+      title: 'Full-Stack Software Engineer',
+      description: 'Engineering scalable microservices, reactive frontend architectures, and automated testing pipelines.',
       ingredients: ['database', 'ruler', 'spark']
     },
     {
       id: 'journey-3',
       date: '2022 - 2023',
-      title: 'Foundations & Open Source',
-      description: 'Open-source contributions, algorithms, UI experiments, and creative development.',
+      title: 'Foundations & Open Source Engineering',
+      description: 'Algorithm design, data structures, civic safety tech (Awaaz Map), and developer tooling.',
       ingredients: ['terminal', 'pickaxe', 'lantern']
     }
   ],
 
   // 4 Villager Trades (Village Scene)
-  tradeLevelText: 'Master Builder · Level 2',
+  tradeLevelText: 'Master Engineer · Level 5',
   trades: [
     {
       id: 'trade-1',
-      service: 'Cinematic Landing Page',
-      description: 'Single-page cinematic 3D website with smooth animations',
+      service: 'Cinematic 3D Web Experiences',
+      description: 'Single-page cinematic 3D website with smooth camera paths & animations',
       price: 12,
       stockStatus: 'In stock',
       icon: 'monitor'
     },
     {
       id: 'trade-2',
-      service: 'Full-Stack Web App',
-      description: 'Multi-page full-stack web build + CMS integration',
+      service: 'Full-Stack Web App Development',
+      description: 'Multi-page full-stack web build with database and cloud integration',
       price: 28,
       stockStatus: 'In stock',
       icon: 'website'
     },
     {
       id: 'trade-3',
-      service: '3D & WebGL Experiences',
-      description: 'Custom WebGL / Three.js scenes, interactive physics & loops',
+      service: 'Interactive WebGL & Shaders',
+      description: 'Custom WebGL / Three.js scenes, interactive physics & procedural loops',
       price: 20,
       stockStatus: 'In stock',
       icon: 'clapperboard'
@@ -287,8 +287,8 @@ export const content: PortfolioContent = {
     {
       id: 'trade-4',
       service: 'Design Systems & UI Kits',
-      description: 'Accessible UI component library, tokens and brand identity',
-      price: 36,
+      description: 'Accessible UI component library, design tokens, and brand identity',
+      price: 16,
       stockStatus: 'Limited',
       icon: 'sparkles'
     }
@@ -296,9 +296,9 @@ export const content: PortfolioContent = {
 
   // Stat Counters (Villager Scene)
   stats: {
-    builds: '20+',
-    clients: '12+',
-    countries: '3+'
+    builds: '6',
+    clients: '00',
+    countries: '1'
   },
 
   // Advancements (Deep Dark Scene: 4 completed + 1 locked)
@@ -313,28 +313,28 @@ export const content: PortfolioContent = {
     {
       id: 'adv-2',
       title: 'Into the Wider World',
-      description: 'Collaborated with international teams and clients',
+      description: 'Shipped open source projects and explored modern web frameworks',
       completed: true,
       icon: 'globe'
     },
     {
       id: 'adv-3',
       title: 'Hot Topic',
-      description: 'Project featured or gained wide community recognition',
+      description: 'Constructed high-impact web apps featured across developer communities',
       completed: true,
       icon: 'fire'
     },
     {
       id: 'adv-4',
       title: 'The Long Haul',
-      description: '1000+ hours of continuous engineering consistency',
+      description: '1000+ hours of continuous engineering consistency & problem solving',
       completed: true,
       icon: 'hourglass'
     },
     {
       id: 'adv-5',
       title: 'Free the End',
-      description: 'Launch next major venture or product',
+      description: 'Launch next major product and engineering milestone',
       completed: false,
       icon: 'portal'
     }

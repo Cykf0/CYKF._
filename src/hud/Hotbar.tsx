@@ -33,7 +33,7 @@ export const Hotbar: React.FC = () => {
 
   const slotTooltips = [
     '1: Diamond Pickaxe [Mines 3x Fast]',
-    '2: Cherry Sapling / Saksham Profile',
+    `2: Cherry Sapling / ${content.owner} Profile`,
     '3: Enchanted Book [Sharpness V]',
     '4: Treasure Chest [Project Vault]',
     '5: Crafting Table [Recipe Grid]',
