@@ -30,7 +30,7 @@ export const VillageIntroDialog: React.FC = () => {
                 {content.owner} ({content.mcUsername})
               </div>
               <div className="text-[10px] text-gray-400">
-                Full-Stack Developer & Voxel Architect
+                B.Tech 1st Year Student · Creative Developer
               </div>
             </div>
           </div>
@@ -56,7 +56,7 @@ export const VillageIntroDialog: React.FC = () => {
             this is the devlopers archive welcome and nice to meet you! :)
           </p>
           <p className="text-gray-300 text-[11px] sm:text-xs">
-            I'm <span className="text-[#55FF55] font-semibold">{content.owner}</span> (aka <span className="text-[#55FFFF] font-semibold">{content.mcUsername}</span>) — a Full-Stack Developer & creative builder crafting high-performance web applications, interactive 3D voxel experiences, and modern software architectures.
+            I'm <span className="text-[#55FF55] font-semibold">{content.owner}</span> (aka <span className="text-[#55FFFF] font-semibold">{content.mcUsername}</span>) — a B.Tech 1st year student & passionate developer crafting interactive 3D voxel experiences with Three.js, modern web projects, and exploring computer science.
           </p>
           <p className="text-gray-400 text-[11px] sm:text-xs">
             Feel free to look around, inspect my projects in the chests, or press <span className="text-[#FFAA00] font-bold">[1-9]</span> on your hotbar to journey through all 9 biomes!"

@@ -4,7 +4,7 @@ import { sounds } from '../audio/soundManager';
 import { content } from '../content';
 
 const SPLASHES = [
-  "Full-Stack Voxel Artist!",
+  "B.Tech Freshman & Builder!",
   "Saksham's Portfolio!",
   "100% Genuine Voxels!",
   "Welcome to Cykf._!",

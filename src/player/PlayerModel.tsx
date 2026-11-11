@@ -303,7 +303,7 @@ export const PlayerModel: React.FC<PlayerModelProps> = ({
             sounds.playXpOrb();
             useStore.getState().setToastMessage({
               title: `Player: ${nametag}`,
-              desc: `Full-stack engineer & Minecraft enthusiast!`,
+              desc: `B.Tech 1st year student & Minecraft enthusiast!`,
               icon: 'diamond'
             });
             setTimeout(() => useStore.getState().setToastMessage(null), 3000);

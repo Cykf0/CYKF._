@@ -145,11 +145,11 @@ export const content: PortfolioContent = {
   github: "https://github.com/Cykf0",
 
   // Player Profile
-  bio: "Full-Stack Software Engineer & Creative Developer based in Gurgaon, Haryana. Crafting high-performance web applications, interactive 3D voxel experiences, audio AI/PWA engineering, and distributed architectures.",
-  role: "Full-Stack Software Engineer",
-  level: "Level 25 · Full Stack Architect",
+  bio: "B.Tech 1st Year Student based in Gurgaon, Haryana. Passionate about computer science, building interactive 3D voxel experiences with Three.js, and learning modern web development.",
+  role: "B.Tech 1st Year Student",
+  level: "Level 1 · B.Tech Freshman (1st Year)",
   server: "Gurgaon · Haryana · India",
-  status: "Open for Opportunities & Collaborations",
+  status: "B.Tech 1st Year · Learning & Building Daily",
 
   // Exact 7 Skills from reference
   skills: [
@@ -237,58 +237,58 @@ export const content: PortfolioContent = {
     {
       id: 'journey-1',
       date: '2024 - Present',
-      title: 'Lead Full-Stack & WebGL Engineer',
-      description: 'Crafting production web applications, interactive 3D voxel experiences, and real-time client systems.',
+      title: 'B.Tech 1st Year & 3D Web Exploration',
+      description: 'Studying engineering fundamentals while building interactive Three.js 3D voxel worlds and web projects.',
       ingredients: ['code', 'layers', 'cloud']
     },
     {
       id: 'journey-2',
       date: '2023 - 2024',
-      title: 'Full-Stack Software Engineer',
-      description: 'Engineering scalable microservices, reactive frontend architectures, and automated testing pipelines.',
+      title: 'Frontend Foundations & JavaScript',
+      description: 'Learning modern web development, DOM manipulation, responsive UI styling, and interactive web pages.',
       ingredients: ['database', 'ruler', 'spark']
     },
     {
       id: 'journey-3',
       date: '2022 - 2023',
-      title: 'Foundations & Open Source Engineering',
-      description: 'Algorithm design, data structures, civic safety tech (Awaaz Map), and developer tooling.',
+      title: 'Programming Basics & Logic',
+      description: 'Starting the coding journey with problem solving, algorithms, and core computer science concepts.',
       ingredients: ['terminal', 'pickaxe', 'lantern']
     }
   ],
 
   // 4 Villager Trades (Village Scene)
-  tradeLevelText: 'Master Engineer · Level 5',
+  tradeLevelText: 'Novice Builder · Level 1',
   trades: [
     {
       id: 'trade-1',
-      service: 'Cinematic 3D Web Experiences',
-      description: 'Single-page cinematic 3D website with smooth camera paths & animations',
+      service: 'Interactive 3D Web Pages',
+      description: 'Single-page interactive 3D web experience with custom camera controls',
       price: 12,
       stockStatus: 'In stock',
       icon: 'monitor'
     },
     {
       id: 'trade-2',
-      service: 'Full-Stack Web App Development',
-      description: 'Multi-page full-stack web build with database and cloud integration',
-      price: 28,
+      service: 'Responsive Web Development',
+      description: 'Modern clean website build with responsive layout and animations',
+      price: 24,
       stockStatus: 'In stock',
       icon: 'website'
     },
     {
       id: 'trade-3',
-      service: 'Interactive WebGL & Shaders',
-      description: 'Custom WebGL / Three.js scenes, interactive physics & procedural loops',
-      price: 20,
+      service: '3D Voxel & WebGL Scenes',
+      description: 'Custom WebGL / Three.js voxel scenes and interactive graphics',
+      price: 18,
       stockStatus: 'In stock',
       icon: 'clapperboard'
     },
     {
       id: 'trade-4',
-      service: 'Design Systems & UI Kits',
-      description: 'Accessible UI component library, design tokens, and brand identity',
-      price: 16,
+      service: 'UI Styling & Component Kits',
+      description: 'Clean modular UI components, Tailwind styling, and responsive design',
+      price: 14,
       stockStatus: 'Limited',
       icon: 'sparkles'
     }
@@ -306,35 +306,35 @@ export const content: PortfolioContent = {
     {
       id: 'adv-1',
       title: 'Taking Inventory',
-      description: 'Shipped first live production web project',
+      description: 'Started B.Tech 1st year and built first live web projects',
       completed: true,
       icon: 'chest'
     },
     {
       id: 'adv-2',
       title: 'Into the Wider World',
-      description: 'Shipped open source projects and explored modern web frameworks',
+      description: 'Exploring computer science, algorithms, and open source development',
       completed: true,
       icon: 'globe'
     },
     {
       id: 'adv-3',
       title: 'Hot Topic',
-      description: 'Constructed high-impact web apps featured across developer communities',
+      description: 'Crafted 9-scene interactive 3D Minecraft voxel portfolio',
       completed: true,
       icon: 'fire'
     },
     {
       id: 'adv-4',
       title: 'The Long Haul',
-      description: '1000+ hours of continuous engineering consistency & problem solving',
+      description: 'Daily consistency in learning code, problem solving, and building',
       completed: true,
       icon: 'hourglass'
     },
     {
       id: 'adv-5',
       title: 'Free the End',
-      description: 'Launch next major product and engineering milestone',
+      description: 'Graduate B.Tech degree and launch career in software engineering',
       completed: false,
       icon: 'portal'
     }
